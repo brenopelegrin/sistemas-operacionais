@@ -16,7 +16,7 @@ RUN make processes && cp ./build/processes.o ./bin/processes
 
 # Compile each demonstration program
 RUN make cpu-bound && cp ./build/cpu-bound.o ./bin/cpu-bound
-RUN make io-bound && cp ./build/cpu-bound.o ./bin/io-bound
+RUN make io-bound && cp ./build/io-bound.o ./bin/io-bound
 RUN make clean
 
 FROM ubuntu:24.04
