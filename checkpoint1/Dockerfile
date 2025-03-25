@@ -1,4 +1,5 @@
-FROM gcc:14.2.0-bookworm
+FROM gcc:14.2.0-bookworm AS buildstage
+LABEL stage="builder"
 COPY entrypoint.sh /usr/app/entrypoint.sh
 RUN mkdir -p /usr/app
 RUN mkdir -p /usr/app/bin
@@ -17,4 +18,8 @@ RUN make processes && cp ./build/processes.o ./bin/processes
 RUN make cpu-bound && cp ./build/cpu-bound.o ./bin/cpu-bound
 RUN make io-bound && cp ./build/cpu-bound.o ./bin/io-bound
 RUN make clean
+
+FROM ubuntu:24.04
+RUN apt-get update -yq && apt-get install -yq time strace
+COPY --from=buildstage /usr/app /usr/app
 ENTRYPOINT ["/bin/bash", "/usr/app/entrypoint.sh"]
