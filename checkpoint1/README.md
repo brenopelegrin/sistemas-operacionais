@@ -15,5 +15,5 @@ Then, the image will be built and saved with the tag ``so-icmc/checkpoint1:lates
 To run the code, first build the Docker image, and then do:
 
 ```bash
-docker run --name checkpoint1 so-icmc/checkpoint1:latest
+docker rm -f checkpoint1 && docker run --name checkpoint1 so-icmc/checkpoint1:latest
 ```
