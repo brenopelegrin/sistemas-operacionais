@@ -11,7 +11,7 @@ main:
 
 memory:
 	@echo "\n> Compiling memory/main.c\n"
-	$(CC) $(CFLAGS) -o build/memory.o src/memory/main.c
+	$(CC) $(CFLAGS) -O0 -o build/memory.o src/memory/main.c
 
 io-and-files:
 	@echo "\n> Compiling io-and-files/main.c\n"

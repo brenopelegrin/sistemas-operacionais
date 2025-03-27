@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+#define ITERATIONS 100000000 // 100 milhões de iterações
+
 int main() {
     // ----------------------------------------
     // 1. Demonstração de brk/sbrk (Heap)
@@ -20,12 +22,12 @@ int main() {
     // ----------------------------------------
     printf("\n[2] Alocando memória com mmap:\n");
     void *mapped_mem = mmap(
-        NULL,                   // Endereço sugerido (deixa o kernel escolher)
-        4096,                   // Tamanho de 1 página
-        PROT_READ | PROT_WRITE, // Permissões: leitura/escrita
-        MAP_PRIVATE | MAP_ANONYMOUS, // Memória anônima (não vinculada a arquivo)
-        -1,                     // Descritor de arquivo (não usado)
-        0                       // Offset (não usado)
+        NULL,                   
+        4096,                   
+        PROT_READ | PROT_WRITE, 
+        MAP_PRIVATE | MAP_ANONYMOUS, 
+        -1,                     
+        0                       
     );
 
     if (mapped_mem == MAP_FAILED) {
@@ -35,11 +37,19 @@ int main() {
     printf("Memória mapeada em:      %p\n", mapped_mem);
 
     // ----------------------------------------
-    // 3. Demonstração de mprotect (Proteção)
+    // 3. Operações intensivas na memória
     // ----------------------------------------
-    printf("\n[3] Alterando permissões com mprotect:\n");
+    printf("\n[3] Escrevendo na memória %d vezes...\n", ITERATIONS);
+    volatile char *mem = (char *)mapped_mem; // volatile evita otimizações
+    for (int i = 0; i < ITERATIONS; i++) {
+        mem[i % 4096] = i % 256; // Acesso cíclico à memória
+    }
+
+    // ----------------------------------------
+    // 4. Demonstração de mprotect (Proteção)
+    // ----------------------------------------
+    printf("\n[4] Alterando permissões com mprotect:\n");
     
-    // Muda para somente leitura
     if (mprotect(mapped_mem, 4096, PROT_READ) == -1) {
         perror("Falha no mprotect");
         munmap(mapped_mem, 4096);
@@ -50,8 +60,8 @@ int main() {
     // ----------------------------------------
     // Limpeza
     // ----------------------------------------
-    munmap(mapped_mem, 4096);  // Libera memória mapeada
-    brk(initial_break);        // Restaura o heap ao tamanho original
+    munmap(mapped_mem, 4096);
+    brk(initial_break);
 
     return 0;
 }
