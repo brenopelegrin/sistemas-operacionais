@@ -16,7 +16,9 @@ int main() {
     } else if (pid == 0) {
         // Código executado pelo filho
         printf("  Processo filho criado! PID: %d\n", getpid());
-        sleep(1);  // Simula trabalho
+        sleep(1); // Simula trabalho
+        // Loop de CPU para também simular trabalho e aumentar user time:
+        for (int i = 0; i < 10000000; i++) {}
         exit(42);  // Termina com status 42
     } else {
         // Código executado pelo pai
