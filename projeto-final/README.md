@@ -1,3 +1,3 @@
-# checkpoint2
+# projeto-final
 
 Nada aqui ainda.
