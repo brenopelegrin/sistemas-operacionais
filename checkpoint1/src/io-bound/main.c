@@ -75,6 +75,14 @@ void create_and_write_files() {
     }
 }
 
+/**
+ * Function: main
+ * --------------
+ * Calls the create_and_write_files function to demonstrate i/o bound tasks.
+ *
+ * Returns:
+ *   0 - executed with success.
+ */
 int main() {
     create_and_write_files();
     return 0;

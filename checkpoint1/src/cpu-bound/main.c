@@ -1,3 +1,5 @@
+// This code doesn't use libraries to keep it strictly CPU-bound
+
 // Maximum number to verify in the sieve algorithm
 #define LIMIT 100000000  
 
