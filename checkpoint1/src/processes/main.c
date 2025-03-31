@@ -4,8 +4,17 @@
 #include <sys/wait.h>
 #include <stdlib.h>
 
+/**
+ * Function: main
+ * --------------
+ * Calls fork(), wait(), exec() syscalls for demonstration.
+ *
+ * Returns:
+ *   0 - executed with success.
+ *  -1 - executed with error.
+ */
 int main() {
-    // Primitiva fork()
+    // Fork primitive
     printf("\n[1] Primitiva fork() - Criação de um processo:\n");
     pid_t pid = fork();
     
@@ -13,10 +22,10 @@ int main() {
         perror("Falha no fork() - Verifique se há recursos suficientes ou permissões adequadas");
         exit(EXIT_FAILURE);
     } else if (pid == 0) {
-        // Código executado pelo filho
+        // Code executed by the child
         printf("  Processo filho criado! PID: %d, PPID: %d\n", getpid(), getppid());
         
-        // Trabalho do filho
+        // Child's work
         printf("  Filho está trabalhando...\n");
         sleep(1);
         for (int i = 0; i < 1000000; i++) {
@@ -24,10 +33,10 @@ int main() {
         }
         exit(0);
     } else {
-        // Código executado pelo pai
+        // Code executed by the parent
         printf("  Processo pai continua. PID: %d\n", getpid());
         
-        // Primitiva wait()
+        // Wait primitive
         printf("\n[2] Primitiva wait() - Sincronização:\n");
         int child_status;
         waitpid(pid, &child_status, 0);
@@ -39,7 +48,7 @@ int main() {
         }
     }
 
-    // Primitiva exec()
+    // Exec primitive
     printf("\n[3] Primitiva exec() - Substituição de um processo:\n");
     pid_t exec_pid = fork();
     
@@ -47,18 +56,18 @@ int main() {
         perror("Falha ao criar processo para exec");
         exit(EXIT_FAILURE);
     } else if (exec_pid == 0) {
-        // Código executado pelo filho
+        // Code executed by the child
         printf("  Processo filho criado para executar comando! PID: %d\n", getpid());
         printf("  Processo filho vai substituir...\n");
         
-        // Substitui por 'ls -l'
+        // Replaces with 'ls -l'
         execlp("ls", "ls", "-l", NULL);
         
-        // Se chegou aqui, o exec falhou
+        // If it reached here, exec failed
         perror("  Falha no exec");
         exit(EXIT_FAILURE);
     } else {
-        // Código executado pelo pai
+        // Code executed by the parent
         int exec_status;
         waitpid(exec_pid, &exec_status, 0);
         
