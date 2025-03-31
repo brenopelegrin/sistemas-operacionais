@@ -1,20 +1,24 @@
 #include <stdio.h>
-#include <fcntl.h>      // For open()
-#include <unistd.h>     // For write() and close()
-#include <string.h>     // For strlen()
-#include <sys/stat.h>   // For mkdir()
-#include <errno.h>      // For errno and EEXIST
+#include <fcntl.h>      // lib for open()
+#include <unistd.h>     // lib for write() and close()
+#include <string.h>     // lib for strlen()
+#include <sys/stat.h>   // lib for mkdir()
+#include <errno.h>      // lib for errno and EEXIST
 
-#define FILE_COUNT 100       // Number of files to create
-#define WRITE_TIMES 2000      // Number of times to write to each file
-#define WRITE_DATA "This is a test line written to the file.\n"
+// Number of files to create
+#define FILE_COUNT 100
 
-#define BASE_DIR "/tmp/checkpoint1/io-bound/"  // Target directory
+// Number of times to write to each file
+#define WRITE_TIMES 2000
+#define WRITE_DATA "Testing string blah blah blah.\n"
+
+// Directory to use for writing files
+#define BASE_DIR "/tmp/checkpoint1/io-bound/"  
 
 /**
  * Function: create_directory
  * --------------------------
- * Creates the required directory structure if it does not exist.
+ * Creates the test directory if it doesn't exist
  */
 void create_directory(const char *path) {
     if (mkdir("/tmp", 0777) && errno != EEXIST) {
@@ -34,36 +38,37 @@ void create_directory(const char *path) {
 /**
  * Function: create_and_write_files
  * --------------------------------
- * Creates multiple files in the target directory and writes data using Linux system calls.
+ * Creates files in the test directory and write to these files using Linux syscalls
  */
 void create_and_write_files() {
-    char filename[128];  // Buffer to hold the file path
+    // Buffer for the file path
+    char filename[128];  
     char buffer[] = WRITE_DATA;
     size_t buffer_len = strlen(buffer);
 
-    // Ensure the target directory exists
+    // First, verify if the directory exists
     create_directory(BASE_DIR);
 
     for (int i = 0; i < FILE_COUNT; i++) {
-        // Generate unique file paths: /tmp/checkpoint1/io-bound/output_{counter}.txt
+        // Generate file paths like: /tmp/checkpoint1/io-bound/output_{counter}.txt
         snprintf(filename, sizeof(filename), "%soutput_%d.txt", BASE_DIR, i);
 
-        // Open the file using low-level Linux system calls
+        // Open the file using Linux open() syscall
         int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
         if (fd == -1) {
             perror("Error opening file");
-            continue;  // Skip this file and move to the next
+            continue;
         }
 
-        // Write multiple lines to the file
+        // Write WRITE_TIMES lines with the test string to the file
         for (int j = 0; j < WRITE_TIMES; j++) {
             if (write(fd, buffer, buffer_len) == -1) {
                 perror("Error writing to file");
-                break;  // Stop writing if an error occurs
+                break;
             }
         }
 
-        // Close the file descriptor
+        // Close the file using Linux close() syscall
         if (close(fd) == -1) {
             perror("Error closing file");
         }

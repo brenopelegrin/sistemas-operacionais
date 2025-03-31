@@ -1,59 +1,52 @@
-// Define the limit for the sieve algorithm (adjust for performance and memory constraints)
+// Maximum number to verify in the sieve algorithm
 #define LIMIT 100000000  
 
-// Statically allocated array to store primality status of numbers up to LIMIT
-// Using static allocation avoids dynamic memory management overhead
+// Array that stores if a number is prime (up to LIMIT numbers)
+// Using static allocation to ensure this code is strictly CPU-bound
 static char is_prime[LIMIT];
 
 /**
  * Function: sieve_of_eratosthenes
  * --------------------------------
- * Implements the Sieve of Eratosthenes algorithm to find all prime numbers up to `limit`.
- *
+ * Runs the Sieve of Eratosthenes algorithm to find prime numbers up to `limit`.
+ * P.S.: In the is_prime array, 1 means it's a prime and 0 means it's not.
+ * 
  * Parameters:
- *   limit - The upper bound up to which primes are calculated.
+ *   limit - The maximum limit to verify if a number is prime.
  *
  * Algorithm:
  *   - Initializes all numbers as prime (1).
- *   - Marks 0 and 1 as non-prime (0).
- *   - Iterates through numbers and marks multiples of primes as non-prime.
- *   - Counts the total number of primes found (though unused in this version).
+ *   - Intializes the 0 and 1 numbers as non-prime (0).
+ *   - Iterates and marks multiples of primes as non-prime.
  */
 void sieve_of_eratosthenes(int limit) {
-    // Step 1: Initialize the array, assuming all numbers are prime
+    // First initializes the array assuming all numbers are prime
     for (int i = 0; i < limit; i++)
         is_prime[i] = 1;
 
-    // Step 2: Mark 0 and 1 as non-prime
+    // Initializes 0 and 1 as non-prime
     is_prime[0] = is_prime[1] = 0;  
 
-    // Step 3: Perform sieve operation
-    for (int i = 2; i * i < limit; i++) {  // Iterate only up to sqrt(limit) for efficiency
-        if (is_prime[i]) {  // If i is still marked as prime
-            for (int j = i * i; j < limit; j += i) {  // Mark multiples of i as non-prime
+    // Do the iteration for every number until limit
+    for (int i = 2; i * i < limit; i++) {
+        if (is_prime[i]) {
+            // if the current i is a prime, mark multiples of i as non-primes
+            for (int j = i * i; j < limit; j += i) {
                 is_prime[j] = 0;
             }
         }
-    }
-
-    // Step 4: Count the number of primes found (though not printed in this version)
-    int prime_count = 0;
-    for (int i = 2; i < limit; i++) {
-        if (is_prime[i])
-            prime_count++;
     }
 }
 
 /**
  * Function: main
  * --------------
- * Entry point of the program.
- * Calls the sieve function to compute prime numbers up to the defined LIMIT.
+ * Calls the sieve function to find prime numbers up to LIMIT.
  *
  * Returns:
- *   0 - Indicates successful execution.
+ *   0 - executed with success.
  */
 int main() {
-    sieve_of_eratosthenes(LIMIT);  // Compute primes up to LIMIT
+    sieve_of_eratosthenes(LIMIT);
     return 0;
 }
