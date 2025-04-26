@@ -50,14 +50,14 @@ docker build -t so-icmc/checkpoint2:latest .
 2. Após fazer o build, execute a imagem ``so-icmc/checkpoint2:latest`` para rodar os programas e obter as métricas:
 
 ```bash
-docker rm -f checkpoint2 && docker run --name checkpoint1 so-icmc/checkpoint2:latest
+docker rm -f checkpoint2 && docker run --name checkpoint2 so-icmc/checkpoint2:latest
 ```
 
 Se quiser executar tudo em um comando só (assumindo que você já está no diretório ``checkpoint2``), faça:
 
 ```bash
 docker build -t so-icmc/checkpoint2:latest . && \
-docker rm -f checkpoint2 && docker run --name checkpoint1 so-icmc/checkpoint2:latest
+docker rm -f checkpoint2 && docker run --name checkpoint2 so-icmc/checkpoint2:latest
 ```
 
 ### Compilando e executando SEM docker (não recomendado)
