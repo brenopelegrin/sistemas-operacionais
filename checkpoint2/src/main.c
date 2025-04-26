@@ -20,7 +20,8 @@ int main(int argc, char *argv[]){
       return 0;
   }
   for (int i=0; i<10; i++){
-    queue_insert(Q, i, &flag);
+    void* ptr = malloc(sizeof(int));
+    queue_insert(Q, ptr, &flag);
     if(flag != PROCESS_SUCESS){
       printf("Ocorreu um problema inesperado\n");
       exit(EXIT_FAILURE);

@@ -17,7 +17,7 @@
 
 // Structs da lista encadeada
 typedef struct node {
-    int data;
+    void* data;
     struct node* next;
 } Node;
 
@@ -41,7 +41,7 @@ LkdList* lkdlist_createList(int *flag);
     Caso falhe, a flag será um erro e retorna ponteiro NULL.
 */
 
-void lkdlist_addItem(LkdList* list, int value, int* flag);
+void lkdlist_addItem(LkdList* list, void* value, int* flag);
 /*  Adiciona item à lista encadeada com o valor value.
     Se sucesso, flag = 1.
 */
@@ -52,7 +52,7 @@ Node* lkdlist_getNode(LkdList* list, int idx, int *flag);
     Caso falhe, a flag será um erro e retorna ponteiro NULL.
 */
 
-int* lkdlist_getData(LkdList* list, int idx, int *flag);
+void* lkdlist_getData(LkdList* list, int idx, int *flag);
 /*  Retorna valor de um Node da lista buscando por índice.
     Se sucesso, flag = 1 e retorna o ponteiro para o valor.
     Caso falhe, a flag será um erro e retorna ponteiro NULL.
@@ -73,7 +73,7 @@ void lkdlist_printList(LkdList* list, int* flag);
 void lkdlist_deleteList(LkdList* list);
 /*  Libera a memória dos Node e da LkdList. */
 
-int lkdlist_isOnList(LkdList* list, int value);
+int lkdlist_isOnList(LkdList* list, void* value);
 /*  Verifica se existe um Node com o mesmo valor value na lista.
     Se existe, retorna 1.
     Se não existe, retorna 0.
@@ -104,54 +104,54 @@ LkdList* lkdlist_createReversedList(LkdList* old, int* flag);
         old = reversed;
 */
 
-void lkdlist_setData(LkdList* list, int idx, int value, int *flag);
+void lkdlist_setData(LkdList* list, int idx, void* value, int *flag);
 /*  Altera valor de um Node da lista para value buscando por índice.
     Se sucesso, flag = 1.
     Caso falhe, a flag será um erro.
 */
 
 // Declaração das funções da fila
-Queue* queue_create(int *flag);
+Queue* queue_create(int* flag);
 /* Cria a fila utilizando lista encadeada.
     Se sucesso, flag = 1.
 */
 
-void queue_insert(Queue*, int, int*);
+void queue_insert(Queue*, void* ele, int* flag);
 /* Insere um elemento no fim da fila.
     Se sucesso, flag = 1.
 */
 
-int queue_pop(Queue*, int*);
+void* queue_pop(Queue*, int* flag);
 /* Retira o primeiro elemento da fila.
     Se sucesso, flag = 1.
 */
 
-int queue_len(Queue*,int*);
+int queue_len(Queue*, int* flag);
 /* Retorna o tamanho da fila.
     Se sucesso, flag = 1.
 */
 
-int queue_haveElement(Queue*,int,int*);
+int queue_haveElement(Queue*, void* ele, int* flag);
 /* Retorna se um elemento existe na fila.
     Se sucesso, flag = 1.
 */
 
-void queue_invert(Queue*,int*);
+void queue_invert(Queue*, int* flag);
 /* Inverte os elementos da fila.
     Se sucesso, flag = 1.
 */
 
-int* queue_getElement(Queue*,int,int*);
+void* queue_getElement(Queue*, int n, int* flag);
 /* Retorna o n-ésimo elemento da fila.
     Se sucesso, flag = 1.
 */
 
-void queue_printQueue(Queue*, int*);
+void queue_printQueue(Queue*, int* flag);
 /* Imprime todos os elementos da fila.
     Se sucesso, flag = 1.
 */
 
-void queue_cleanQueue(Queue*,int*);
+void queue_cleanQueue(Queue*, int* flag);
 /* Elimina todos os elementos da fila, tornado ela vazia */
 
 void queue_deleteQueue(Queue*);

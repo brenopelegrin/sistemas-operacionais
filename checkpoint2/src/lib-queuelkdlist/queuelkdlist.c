@@ -15,7 +15,7 @@ LkdList* lkdlist_createList(int *flag){
     return list;
 }
 
-void lkdlist_addItem(LkdList* list, int value, int* flag){
+void lkdlist_addItem(LkdList* list, void* value, int* flag){
     Node* newNode = (Node*) malloc(sizeof(Node));
 
     if(newNode == NULL){
@@ -39,7 +39,7 @@ void lkdlist_addItem(LkdList* list, int value, int* flag){
     return;
 }
 
-void lkdlist_addItemLeft(LkdList* list, int value, int* flag){
+void lkdlist_addItemLeft(LkdList* list, void* value, int* flag){
     Node* newNode = (Node*) malloc(sizeof(Node));
 
     if(newNode == NULL){
@@ -83,7 +83,7 @@ Node* lkdlist_getNode(LkdList* list, int idx, int *flag){
     }
 }
 
-int* lkdlist_getData(LkdList* list, int idx, int *flag){
+void* lkdlist_getData(LkdList* list, int idx, int *flag){
     Node* currNode = lkdlist_getNode(list, idx, flag);
     if(currNode == NULL){
         return NULL;
@@ -131,7 +131,7 @@ void lkdlist_removeItem(LkdList* list, int idx, int* flag){
 void lkdlist_printList(LkdList* list, int* flag){
     for(int i=0; i<list->size; i++){
         Node* currNode = lkdlist_getNode(list, i, flag);
-        printf("%d\n", currNode->data);
+        printf("%p\n", currNode->data);
     }
 }
 
@@ -162,7 +162,7 @@ LkdList* lkdlist_createReversedList(LkdList* old, int* flag){
     return newList;
 }
 
-int lkdlist_isOnList(LkdList* list, int value){
+int lkdlist_isOnList(LkdList* list, void* value){
     Node* currNode = list->first;
     for(int i=0; i<list->size; i++){
         if(currNode->data == value){
@@ -188,7 +188,7 @@ int lkdlist_isEmpty(LkdList* list){
     }
 }
 
-void lkdlist_setData(LkdList* list, int idx, int value, int *flag){
+void lkdlist_setData(LkdList* list, int idx, void* value, int *flag){
     Node* currNode = lkdlist_getNode(list, idx, flag);
     if(currNode == NULL){
         return;
@@ -211,7 +211,7 @@ Queue* queue_create(int *flag){
 }
 
 
-void queue_insert(Queue *Q, int ele, int *flag){
+void queue_insert(Queue *Q, void* ele, int *flag){
     if(Q->created!=1){
         *flag=CREATION_ERROR;
         return;
@@ -220,8 +220,8 @@ void queue_insert(Queue *Q, int ele, int *flag){
     return;
 }
 
-int queue_pop(Queue *Q, int *flag){
-    int ele = *lkdlist_getData(Q->l,0,flag);
+void* queue_pop(Queue *Q, int *flag){
+    void* ele = lkdlist_getData(Q->l,0,flag);
     lkdlist_removeItem(Q->l,0,flag);
     return ele;
 }
@@ -238,7 +238,7 @@ int queue_len(Queue *Q,int *flag){
 }
 
 
-int queue_haveElement(Queue *Q,int ele,int *flag){
+int queue_haveElement(Queue *Q, void* ele, int *flag){
     Node *p;
 
     if(Q->created!=1){
@@ -275,13 +275,12 @@ void queue_printQueue(Queue* Q, int* flag){
     return;
 }
 
-
-int* queue_getElement(Queue *Q,int n,int *flag){
-    int* val = lkdlist_getData(Q->l,n,flag);
+void* queue_getElement(Queue *Q, int n, int *flag){
+    void* val = lkdlist_getData(Q->l, n, flag);
     return val;
 }
 
-void queue_cleanQueue(Queue *Q,int *flag){
+void queue_cleanQueue(Queue *Q, int *flag){
     lkdlist_deleteList(Q->l);
     LkdList *L=lkdlist_createList(flag);
     Q->l=L;
