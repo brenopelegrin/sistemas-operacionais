@@ -4,6 +4,62 @@
 
 #include "lib-queuelkdlist/queuelkdlist.h"
 
+// Supondo as seguintes variáveis globais já estejam definidas em outro lugar
+extern int buffer_size;
+extern void** buffer; // ponteiros genéricos
+extern Queue* fila_livres;   // fila 1: endereços livres
+extern Queue* fila_ocupados; // fila 2: endereços ocupados
+extern pthread_mutex_t mutex_livres;
+extern pthread_mutex_t mutex_ocupados;
+extern sem_t sem_empty;
+extern sem_t sem_full;
+
+// Função do produtor
+void* produtor(void* arg) {
+  int flag;
+
+  while (1) {
+      // 1. Espera até que haja um espaço livre na fila
+      sem_wait(&sem_empty);
+
+      // 2. Entra na região crítica da fila de endereços livres
+      pthread_mutex_lock(&mutex_livres);
+      void* endereco_ptr = queue_remove(fila_livres, &flag);
+      pthread_mutex_unlock(&mutex_livres);
+
+      if (flag != PROCESS_SUCESS || endereco_ptr == NULL) {
+          fprintf(stderr, "Erro ao remover endereço livre da fila.\n");
+          continue;
+      }
+
+      int index = *((int*) endereco_ptr); // índice do buffer
+
+      // 3. Simula produção: escreve algo no buffer
+      //    (alocamos um inteiro com valor aleatório)
+      int* novo_item = malloc(sizeof(int));
+      *novo_item = rand() % 1000; // valor aleatório
+      buffer[index] = novo_item;
+
+      printf("[Produtor] Produziu valor %d no buffer[%d]\n", *novo_item, index);
+
+      // 4. Entra na região crítica da fila de endereços ocupados
+      pthread_mutex_lock(&mutex_ocupados);
+      queue_insert(fila_ocupados, endereco_ptr, &flag);
+      pthread_mutex_unlock(&mutex_ocupados);
+
+      if (flag != PROCESS_SUCESS) {
+          fprintf(stderr, "Erro ao inserir endereço ocupado na fila.\n");
+          // Iremos gerenciar a memória alocada? Se sim, seria aqui
+          continue;
+      }
+
+      // 5. Sinaliza que há um novo item disponível para consumo
+      sem_post(&sem_full);
+  }
+
+  return NULL;
+}
+
 void *print_message_function( void *ptr ){
   char *message;
   message = (char *) ptr;
