@@ -120,9 +120,9 @@ void* consumer(void* arg) {
  *   - Q_occupied: fila de ponteiros para endereços ocupados.
  * - Aloca e inicializa os itens do buffer, inserindo os endereços na Q_available.
  * - Inicializa três semáforos:
- *   - sem_empty: conta os slots livres no buffer (valor inicial = BUFFER_SIZE).
- *   - sem_full: conta os slots ocupados no buffer (valor inicial = 0).
- *   - sem_mutex: semáforo binário para exclusão mútua em seções críticas.
+ *   - sem_empty: conta os itens livres no buffer (valor inicial = BUFFER_SIZE).
+ *   - sem_full: conta os itens ocupados no buffer (valor inicial = 0).
+ *   - sem_mutex: semáforo binário (mutex) para exclusão mútua em seções críticas.
  * - Cria duas threads:
  *   - Uma thread consumidora que consome itens continuamente.
  *   - Uma thread produtora que produz itens continuamente.

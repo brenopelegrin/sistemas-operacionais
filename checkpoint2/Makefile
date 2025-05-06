@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall
+CFLAGS = -Wall -Wno-unused-but-set-variable
 
 TARGET = checkpoint2
 

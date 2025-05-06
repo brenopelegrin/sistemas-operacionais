@@ -1,11 +1,32 @@
 # checkpoint2
 
-Nesse diretório, estão disponíveis os códigos relacionados a entrega do **Checkpoint 2**.
+Nesse diretório, estão disponíveis os códigos relacionados a entrega do **Checkpoint 2**. Essa entrega consiste em um sistema produtor-consumidor, que foi
+criado usando duas threads, um buffer compartilhado, e duas filas. A fila de endereços livres armazena os endereços livres do buffer, enquanto a fila de
+endereços ocupados armazena os endereços ocupados do buffer.
+
+Quando um item é produzido, ele é escrito no endereço no topo da fila de livres, e então é movido para a fila de ocupados. Quando um item é consumido,
+o seu endereço é retirado da fila de ocupados e movido para a fila de livres.
+
+A implementação foi feita utilizando ``pthreads`` e semáforos POSIX (``sem_t``), e garante:
+- Exclusão mútua das seções críticas entre produtor e consumidor
+- Não há espera ocupada (os semáforos ``full`` e ``empty`` sinalizam a ação de dormir/acordar para as threads)
+- O compartilhamento de memória entre as threads é seguro, garantido pela exclusão mútua
+
+As filas foram implementadas usando listas encadeadas, e o tipo de dado armazenado dentro dos nós é um ponteiro para inteiro (``int*``). O buffer criado
+é apenas um vetor que armazena ponteiros para inteiros, ou seja, é uma estrutura virtual. A alocação dos ponteiros é feita com ``malloc``.
+
+
+Toda a memória é liberada ao final do programa, caso as threads terminem com algum erro. Caso contrário, o programa roda indefinidamente.
 
 ## Estrutura
 
 Todos os códigos dos programas foram desenvolvidos em linguagem ``C``.
-- Inserir aqui informações sobre as bibliotecas utilizadas
+
+Utilizamos as bibliotecas:
+- pthreads: para criar e controlar threads
+- semaphore: para criar e usar semáforos POSIX
+- unistd: para simular o tempo de execução (``usleep``)
+- lib-queuelkdlist: biblioteca de filas/listas encadeadas criada previamente pelo integrante do grupo [Breno Pelegrin](https://github.com/brenopelegrin)
 
 O build dos programas é feito automaticamente através de um ``Makefile``, e foi criada uma imagem Docker para garantir a portabilidade e reproducibilidade
 do projeto.
@@ -23,8 +44,8 @@ checkpoint2
 └── src                       # Pasta onde estão os arquivos dos programas
     ├── main.c                # Source do programa principal
     └── lib-queuelkdlist
-        └── queuelkdlist.c    # Source da biblioteca lib-queuelkdlist
-        └── queuelkdlist.h    # Header da biblioteca lib-queuelkdlist
+        └── queuelkdlist.c    # Source da biblioteca lib-queuelkdlist (filas baseadas em listas encadeadas)
+        └── queuelkdlist.h    # Header da biblioteca lib-queuelkdlist (filas baseadas em listas encadeadas)
 ```
 
 ## Como compilar e rodar
