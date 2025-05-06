@@ -1,114 +1,139 @@
 #include <stdlib.h>
-#include <stdio.h>
+#include <stdio.h> 
+#include <unistd.h>
 #include <pthread.h>
-
+#include <semaphore.h>
 #include "lib-queuelkdlist/queuelkdlist.h"
 
-// Função do produtor
-void* produtor(void* arg) {
-  int flag;
+#define BUFFER_SIZE 10
+#define PRODUCER_WAIT_TIME_US 300000 // 300 milisegundos
+#define CONSUMER_WAIT_TIME_US 150000 // 150 milisegundos
 
+int* buffer[BUFFER_SIZE];
+int flag;
+
+// Mutexes
+pthread_cond_t cond_full = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond_empty = PTHREAD_COND_INITIALIZER;
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+Queue* Q_livre;
+Queue* Q_ocupado;
+
+void* producer(void* arg) {
+  int local_generation_count = 0;
   while (1) {
-      // 1. Espera até que haja um espaço livre na fila
-      sem_wait(&sem_empty);
+    pthread_mutex_lock(&mutex); // entra na região crítica
 
-      // 2. Entra na região crítica da fila de endereços livres
-      pthread_mutex_lock(&mutex_livres);
-      void* endereco_ptr = queue_remove(fila_livres, &flag);
-      pthread_mutex_unlock(&mutex_livres);
+    // Dorme enquanto a fila de livres está vazia (não há o que ser produzido)
+    while (queue_len(Q_livre, &flag) == 0) {
+      pthread_cond_wait(&cond_empty, &mutex);
+    }
 
-      if (flag != PROCESS_SUCESS || endereco_ptr == NULL) {
-          fprintf(stderr, "Erro ao remover endereço livre da fila.\n");
-          continue;
-      }
+    // Início da região crítica
+    int* available_ptr = queue_pop(Q_livre, &flag);
+    *available_ptr = local_generation_count;
 
-      int index = *((int*) endereco_ptr); // índice do buffer
+    local_generation_count = (local_generation_count + 1) % BUFFER_SIZE;
 
-      // 3. Simula produção: escreve algo no buffer
-      //    (alocamos um inteiro com valor aleatório)
-      int* novo_item = malloc(sizeof(int));
-      *novo_item = rand() % 1000; // valor aleatório
-      buffer[index] = novo_item;
-
-      printf("[Produtor] Produziu valor %d no buffer[%d]\n", *novo_item, index);
-
-      // 4. Entra na região crítica da fila de endereços ocupados
-      pthread_mutex_lock(&mutex_ocupados);
-      queue_insert(fila_ocupados, endereco_ptr, &flag);
-      pthread_mutex_unlock(&mutex_ocupados);
-
-      if (flag != PROCESS_SUCESS) {
-          fprintf(stderr, "Erro ao inserir endereço ocupado na fila.\n");
-          // Iremos gerenciar a memória alocada? Se sim, seria aqui
-          continue;
-      }
-
-      // 5. Sinaliza que há um novo item disponível para consumo
-      sem_post(&sem_full);
+    queue_insert(Q_ocupado, available_ptr, &flag);
+    printf("[debug] produtor: item produzido, endereço %p, valor %d.\n", (void*)available_ptr, *available_ptr);
+    // Fim da região crítica
+    
+    pthread_cond_signal(&cond_full);  // sinaliza que há item disponível
+    pthread_mutex_unlock(&mutex); // sai da região crítica
+    usleep(PRODUCER_WAIT_TIME_US);
   }
-
   return NULL;
 }
 
-void *print_message_function( void *ptr ){
-  char *message;
-  message = (char *) ptr;
-  printf("%s \n", message);
+
+void* consumer(void* arg) {
+  int* item;
+  while (1) {
+    pthread_mutex_lock(&mutex); // entra na região crítica
+
+    // Dorme enquanto a fila de ocupados está vazia (não há o que ser lido)
+    while (queue_len(Q_ocupado, &flag) == 0) {
+      pthread_cond_wait(&cond_full, &mutex);
+    }
+
+    // Início da região crítica
+    item = queue_pop(Q_ocupado, &flag);
+    queue_insert(Q_livre, item, &flag);
+    printf("[debug] consumidor: item consumido, endereço %p, valor %d.\n", item, *item);
+    // Fim da região crítica
+    
+    pthread_cond_signal(&cond_empty);  // sinaliza que há espaço livre
+    pthread_mutex_unlock(&mutex); // sai da região crítica
+    usleep(CONSUMER_WAIT_TIME_US);
+  }
+  return NULL;
 }
 
+
 int main(int argc, char *argv[]){
-  int flag;
-
-  /* Criar uma fila */
-  Queue* Q = queue_create(&flag);
-  if(Q == NULL){
-      printf("Erro: Não foi possível criar a fila.");
-      return 0;
+  /* Cria a fila de endereços disponíveis */
+  Q_livre = queue_create(&flag);
+  if(Q_livre == NULL){
+      printf("[erro] fila: não foi possível criar a fila de endereços livres.\n");
+      return -1;
   }
-  for (int i=0; i<10; i++){
-    void* ptr = malloc(sizeof(int));
-    queue_insert(Q, ptr, &flag);
-    if(flag != PROCESS_SUCESS){
-      printf("Ocorreu um problema inesperado\n");
-      exit(EXIT_FAILURE);
+
+  /* Cria a fila de endereços ocupados */
+  Q_ocupado = queue_create(&flag);
+  if(Q_ocupado == NULL){
+      printf("[erro] fila: não foi possível criar a fila de endereços ocupados.\n");
+      return -1;
+  }
+
+  /* Inicializa o buffer alocando pointeiros para inteiros */
+  for(int i=0; i<BUFFER_SIZE; i++){
+    int* ptr = (int*) malloc(sizeof(int));
+    *ptr = -1;
+    buffer[i] = ptr;
+
+    /* Insere endereços livres na fila de livres */
+    queue_insert(Q_livre, ptr, &flag);
+    
+    if (flag != 1){
+      printf("[error] fila: falha ao adicionar item na fila.\n");
     }
+    
+    printf("[debug] alocado pointeiro int: endereço %p, valor %d.\n", ptr, *ptr);
   }
+  printf("[debug] printando fila Q_livre:\n");
+  queue_printQueue(Q_livre, &flag);
 
-  printf("Printing a test queue with 10 elements:\n");
-
-  queue_printQueue(Q, &flag);
-  queue_deleteQueue(Q);
-
-  printf("\nCreating threads to print hello world...\n");
-
-  pthread_t thread1, thread2;
-  const char *message1 = "Thread 1 - hello world";
-  const char *message2 = "Thread 2 - hello world";
-  int  iret1, iret2;
+  /* Cria as threads do produtor e consumidor */
+  printf("\n[info] criando threads para produtor e consumidor...\n");
+  pthread_t consumer_thread, producer_thread;
+  int iret1, iret2;
   
-  /* Create independent threads each of which will execute function */
-  iret1 = pthread_create( &thread1, NULL, print_message_function, (void*) message1);
-  if(iret1)
-  {
-      fprintf(stderr,"Error - pthread_create() return code: %d\n", iret1);
+  iret1 = pthread_create(&producer_thread, NULL, producer, NULL);
+  if(iret1){
+      fprintf(stderr,"[erro] pthread_create(producer_thread): return code %d\n", iret1);
       exit(EXIT_FAILURE);
   }
 
-  iret2 = pthread_create( &thread2, NULL, print_message_function, (void*) message2);
-  if(iret2)
-  {
-      fprintf(stderr,"Error - pthread_create() return code: %d\n", iret2);
+  iret2 = pthread_create(&consumer_thread, NULL, consumer, NULL);
+  if(iret2){
+      fprintf(stderr,"[erro] pthread_create(consumer_thread): return code %d\n", iret2);
       exit(EXIT_FAILURE);
   }
 
-  printf("pthread_create() for thread 1 returns: %d\n", iret1);
-  printf("pthread_create() for thread 2 returns: %d\n", iret2);
+  /* Aguarda as threads */
+  pthread_join(producer_thread, NULL);
+  pthread_join(consumer_thread, NULL);
 
-  /* Wait till threads are complete before main continues. Unless we  */
-  /* wait we run the risk of executing an exit which will terminate   */
-  /* the process and all threads before the threads have completed.   */
-  pthread_join( thread1, NULL);
-  pthread_join( thread2, NULL);
+  /* Destrói filas */
+  queue_deleteQueue(Q_livre);
+  queue_deleteQueue(Q_ocupado);
+
+  /* Destrói os endereços alocados para o buffer */
+  for(int i=0; i<BUFFER_SIZE; i++){
+    free(buffer[i]);
+  }
 
   exit(EXIT_SUCCESS);
 }

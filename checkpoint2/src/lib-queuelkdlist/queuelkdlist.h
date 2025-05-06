@@ -7,13 +7,13 @@
     e vão até size-1, seguindo a convenção do C.
 */
 
-#define LKDLIST_ERROR_NOT_IMPLEMENTED 0
+#define LKDLIST_ERROR_NOT_IMPLEMENTED -4
 #define LKDLIST_SUCCESS 1
 
 // Definições da fila
-#define QUEUE_SUCCESS LKDLIST_SUCCESS 
-#define QUEUE_CREATION_ERROR 2
-#define QUEUE_MEMORY_ALLOCATION_ERROR 3
+#define QUEUE_SUCCESS 1
+#define QUEUE_CREATION_ERROR -100
+#define QUEUE_MEMORY_ALLOCATION_ERROR -101
 
 // Structs da lista encadeada
 typedef struct node {
