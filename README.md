@@ -38,7 +38,8 @@ Padrão de commits:
 ## Deploy na VM
 
 Dentro da VM, foi criado um script ``~/deploy.sh`` na pasta home. Esse script irá baixar o repositório e mudar para a branch
-``main``, utilizando uma chave SSH pré-configurada na máquina.
+``main``, utilizando uma chave SSH pré-configurada na máquina. Em seguida, irá resetar a HEAD para a última tag de submissão
+e, então, apagar o ``.git`` do repositório para deixá-lo estático.
 
 Para rodá-lo, basta logar na VM:
 
