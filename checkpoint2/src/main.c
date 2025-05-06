@@ -40,13 +40,12 @@ void* producer(void* arg) {
     printf("[debug] produtor: item produzido, endereço %p, valor %d.\n", (void*)available_ptr, *available_ptr);
     // Fim da região crítica
     
-    pthread_cond_signal(&cond_full);  // sinaliza que há item disponível
+    pthread_cond_broadcast(&cond_full);  // sinaliza que há item disponível
     pthread_mutex_unlock(&mutex); // sai da região crítica
     usleep(PRODUCER_WAIT_TIME_US);
   }
   return NULL;
 }
-
 
 void* consumer(void* arg) {
   int* item;
@@ -64,7 +63,7 @@ void* consumer(void* arg) {
     printf("[debug] consumidor: item consumido, endereço %p, valor %d.\n", item, *item);
     // Fim da região crítica
     
-    pthread_cond_signal(&cond_empty);  // sinaliza que há espaço livre
+    pthread_cond_broadcast(&cond_empty);  // sinaliza que há espaço livre
     pthread_mutex_unlock(&mutex); // sai da região crítica
     usleep(CONSUMER_WAIT_TIME_US);
   }
@@ -123,8 +122,8 @@ int main(int argc, char *argv[]){
   }
 
   /* Aguarda as threads */
-  pthread_join(producer_thread, NULL);
   pthread_join(consumer_thread, NULL);
+  pthread_join(producer_thread, NULL);
 
   /* Destrói filas */
   queue_deleteQueue(Q_livre);
