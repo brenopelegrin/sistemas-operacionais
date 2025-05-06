@@ -4,16 +4,6 @@
 
 #include "lib-queuelkdlist/queuelkdlist.h"
 
-// Supondo as seguintes variáveis globais já estejam definidas em outro lugar
-extern int buffer_size;
-extern void** buffer; // ponteiros genéricos
-extern Queue* fila_livres;   // fila 1: endereços livres
-extern Queue* fila_ocupados; // fila 2: endereços ocupados
-extern pthread_mutex_t mutex_livres;
-extern pthread_mutex_t mutex_ocupados;
-extern sem_t sem_empty;
-extern sem_t sem_full;
-
 // Função do produtor
 void* produtor(void* arg) {
   int flag;
