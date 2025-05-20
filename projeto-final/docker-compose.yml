@@ -1,0 +1,77 @@
+services:
+  backend:
+    restart: on-failure
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+      #rabbitmq:
+        #condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    depends_on:
+      backend:
+        condition: service_started
+
+  postgres:
+    image: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # set default database
+      POSTGRES_DB: postgres
+    # set volume for persistent data
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+  rabbitmq:
+    image: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    # set volume for persistent data
+    volumes:
+      - rabbitmqdata:/var/lib/rabbitmq
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    
+  # redis for caching
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    # set volume for persistent data
+    volumes:
+      - redisdata:/var/lib/redis
+
+# define volumes
+volumes:
+  pgdata:
+    driver: local
+  rabbitmqdata:
+    driver: local
+  redisdata:
+    driver: local
+
+# setup network as host by default
+networks:
+  default:
+    driver: bridge
