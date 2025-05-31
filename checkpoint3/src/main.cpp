@@ -404,7 +404,7 @@ private:
         }
         cout << "[MemoryManager] Alocados " << this->num_frames_in_physical_memory
              << " quadros de " << this->frame_size_bytes << " bytes cada na memória física." << endl;
-        cout << "[MemoryManager] Memória física total: " << (long long)this->num_frames_in_physical_memory * this->frame_size_bytes << " bytes." << endl;
+        cout << "[MemoryManager] Memória física total: " << this->num_frames_in_physical_memory * this->frame_size_bytes << " bytes." << endl;
     }
 
     /**
@@ -584,7 +584,7 @@ public:
         int frame_size_bytes_param,
         int logic_address_size_bits_param,
         int num_frames_in_physical_memory_param,
-        long long max_virtual_memory_size_bytes_param,
+        int max_virtual_memory_size_bytes_param,
         MemoryAlgorithm memory_algorithm_param) :
         page_size_bytes(page_size_bytes_param),
         frame_size_bytes(frame_size_bytes_param),
@@ -973,6 +973,7 @@ public:
         cout << "\n=============== FIM ARQUIVO ==============\n" << endl;
     }
 };
+
 // Função para remover espaços em branco de uma string (início e fim)
 std::string trim(const std::string& str) {
     const std::string whitespace = " \t\n\r\f\v";
@@ -1098,7 +1099,7 @@ int main(int argc, char* argv[]) {
     std::cout << "  Tamanho da página: " << pageSize << " bytes (" << pageSize / 1024.0 << " KB)" << std::endl;
     std::cout << "  Tamanho do quadro: " << frameSize << " bytes (" << frameSize / 1024.0 << " KB)" << std::endl;
     std::cout << "  Número de quadros na memória física: " << numFrames << std::endl;
-    std::cout << "  Tamanho total da memória física: " << static_cast<long long>(numFrames) * frameSize / 1024.0 << " KB" << std::endl;
+    std::cout << "  Tamanho total da memória física: " << numFrames * frameSize / 1024.0 << " KB" << std::endl;
     std::cout << "  Algoritmo de substituição: " << (algorithm == LRU ? "LRU" : "Clock") << std::endl;
     std::cout << "  Tamanho dos endereços lógicos: " << logicAddressBits << " bits" << std::endl;
     std::cout << "  Limite máximo de memória virtual (calculado): " << maxVirtualMemorySystem / 1024.0 << " KB (" << maxVirtualMemorySystem << " bytes)" << std::endl;
