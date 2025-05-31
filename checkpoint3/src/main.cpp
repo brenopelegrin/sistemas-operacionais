@@ -360,105 +360,617 @@ public:
     }
 };
 
+/**
+ * @class MemoryManager
+ * @brief Gerenciador de Memória.
+ * Simula o gerenciamento de memória virtual usando paginação.
+ * Lida com a criação de processos, alocação de memória, tratamento de page faults,
+ * e a aplicação de algoritmos de substituição. Também gera estatísticas úteis sobre a memória.
+ */
 class MemoryManager {
-  private:
+private:
     int page_size_bytes;
     int frame_size_bytes;
     int logic_address_size_bits;
     int num_frames_in_physical_memory;
-    int max_virtual_memory_size;
+    int max_virtual_memory_size_bytes;
     MemoryAlgorithm memory_algorithm;
-    
-    std::vector<void*> frames;
 
-    void _free_physical_memory(){
-      // Free the allocated frames
-      for(int i=this->frames.size(); i>0; i--){
-        void* p = this->frames.back();
-        free(p);
-        this->frames.pop_back();
-      }
-    }
+    vector<Frame> frames;                       // quadros da memória física.
+    unordered_map<int, Process*> processes;     // mapa de processos (PID -> Process).
+    queue<int> freeFrames;                      // fila de quadros livres
 
-    void _allocate_physical_memory(){
-      for(int i=0; i<num_frames_in_physical_memory; i++){
-        // Keep trying to allocate memory if it isn't available
-        void* p = NULL;
-        while(p == NULL){
-          p = malloc(frame_size_bytes);
+    // Estatísticas
+    int pageFaultCount;
+    int swapInCount;
+    int swapOutCount;
+    int totalMemoryAccesses;                    // contador de operações R/W
+    int currentTime;                            // clock do sistema
+    int current_total_virtual_memory_allocated_bytes;
+
+    // Algoritmos de substituição
+    LRUAlgorithm* lruAlgorithm;
+    ClockAlgorithm* clockAlgorithm;
+
+    /**
+     * @brief Aloca e inicializa os quadros da memória física.
+     * Inicializa os frames e a fila freeFrames.
+     */
+    void _allocate_physical_memory() {
+        frames.clear();
+        for (int i = 0; i < num_frames_in_physical_memory; i++) {
+            frames.emplace_back(i);
+            freeFrames.push(i);
         }
-        // Put the pointer into the frames vector after getting it from malloc
-        this->frames.push_back(p);
-      }
-      cout << "[MemoryManager] " << "Allocated " << this->num_frames_in_physical_memory << " frames of " << this->frame_size_bytes << " bytes each in physical memory" << endl;
+        cout << "[MemoryManager] Alocados " << this->num_frames_in_physical_memory
+             << " quadros de " << this->frame_size_bytes << " bytes cada na memória física." << endl;
+        cout << "[MemoryManager] Memória física total: " << (long long)this->num_frames_in_physical_memory * this->frame_size_bytes << " bytes." << endl;
     }
-  public:
+
+    /**
+     * @brief Verifica se uma string contém apenas caracteres binários ('0' ou '1').
+     * @param str A string a ser validada.
+     * @return True se a string é um número binário válido e não vazio, false caso contrário.
+     */
+    bool isValidBinary(const string& str) {
+        return !str.empty() &&
+               str.find_first_not_of("01") == string::npos;
+    }
+
+    /**
+     * @brief Verifica se uma string contém apenas dígitos decimais ('0'-'9').
+     * @param str A string a ser validada.
+     * @return True se a string é um número decimal válido e não vazio, false caso contrário.
+     */
+    bool isValidDecimal(const string& str) {
+        return !str.empty() &&
+               str.find_first_not_of("0123456789") == string::npos;
+    }
+
+    /**
+     * @brief Verifica se um operando de endereço está no formato Tipo A "(x)2".
+     * @param operand A string do operando.
+     * @return True se o formato corresponde ao Tipo A, false caso contrário.
+     */
+    bool isTypeAFormat(const string& operand) {
+        return operand.length() >= 4 &&
+               operand[0] == '(' &&
+               operand[operand.length()-1] == '2' &&
+               operand[operand.length()-2] == ')';
+    }
+
+    /**
+     * @brief Converte um operando de endereço tipo A, ou seja, no formato "(x)2" para um inteiro.
+     * O valor 'x' é extraído e convertido para inteiro.
+     * @param operand A string do operando no formato Tipo A.
+     * @return O valor decimal de 'x'.
+     */
+    int convertTypeAAddress(const string& operand) {
+        string numStr = operand.substr(1, operand.length() - 3);
+        return stoi(numStr);
+    }
+
+    /**
+     * @brief Converte um operando de endereço do Tipo B, ou seja, no formato binário, para um inteiro.
+     * @param operand A string representando o número binário no formato Tipo B.
+     * @return O valor decimal correspondente ao binário.
+     */
+    int convertTypeBAddress(const string& operand) {
+        int result = 0;
+        for (char c : operand) {
+            result = result * 2 + (c - '0');
+        }
+        return result;
+    }
+
+    /**
+     * @brief Traduz um endereço virtual em número da página e deslocamento (offset).
+     * @param virtualAddress O endereço virtual a ser traduzido.
+     * @return Um par (pair) contendo o número da página e o deslocamento.
+     */
+    pair<int, int> translateVirtualAddress(int virtualAddress) {
+        int pageNumber = virtualAddress / page_size_bytes;
+        int offset = virtualAddress % page_size_bytes;
+        return make_pair(pageNumber, offset);
+    }
+
+    /**
+     * @brief Trata uma page fault.
+     * Incrementa o contador de page faults, avança o tempo do sistema. Se tiver quadros livres, aloca um.
+     * Caso contrário, seleciona um quadro vítima usando o algoritmo configurado,
+     * então faz swap out da página antiga (se necessário) e swap in da nova página.
+     * Atualiza a tabela de páginas do processo e o estado do quadro.
+     * @param processId ID do processo que causou a falta de página.
+     * @param pageNumber Número da página virtual que faltou.
+     */
+    void handlePageFault(int processId, int pageNumber) {
+        pageFaultCount++;
+        currentTime++; 
+        cout << "    [PAGE FAULT] Processo P" << processId << ", Página " << pageNumber << " (Tempo: " << currentTime << ")" << endl;
+
+        int frameNumber;
+        Process* process = processes[processId];
+
+        if (process->pageTable->isPageLoaded(pageNumber)) {
+            cout << "    [WARNING] Página " << pageNumber << " já está carregada! (handlePageFault check)" << endl;
+            return;
+        }
+
+        if (!freeFrames.empty()) {
+            frameNumber = freeFrames.front();
+            freeFrames.pop();
+        } else {
+            cout << "    [SUBSTITUIÇÃO] Memória cheia, selecionando quadro vítima." << endl;
+            if (memory_algorithm == LRU) {
+                frameNumber = lruAlgorithm->selectVictimFrame(frames);
+            } else { 
+                frameNumber = clockAlgorithm->selectVictimFrame(frames);
+            }
+            if (frameNumber == -1) {
+                 cerr << "[ERROR CRÍTICO] Nenhum quadro vítima pôde ser selecionado!" << endl;
+                 return;
+            }
+            swapOut(frameNumber);
+        }
+
+        swapIn(processId, pageNumber, frameNumber);
+        process->pageTable->mapPageToFrame(pageNumber, frameNumber);
+        process->pageTable->setReferenced(pageNumber, true, currentTime); 
+        process->pageTable->setDirty(pageNumber, false); // páginas recém carregadas devem estar limpas (dirty=false)
+
+        frames[frameNumber].occupied = true;
+        frames[frameNumber].processId = processId;
+        frames[frameNumber].pageNumber = pageNumber;
+        frames[frameNumber].loadTime = currentTime; // loadTime (LRU) ou lastAccess (Clock)
+        frames[frameNumber].referenceBit = true;    // bit de referência (Clock)
+    }
+
+    /**
+     * @brief Realiza a operação de swap out de uma página de um quadro.
+     * Incrementa o contador de swap out. A página no quadro especificado é removida da memória física
+     * (marcada como inválida na tabela de páginas do processo). Se a página estiver suja (dirty),
+     * escreve ela na memória secundária (geramos apenas um log para simplificar).
+     * O quadro físico é então marcado como livre.
+     * @param frameNumber O número do quadro a ser liberado.
+     */
+    void swapOut(int frameNumber) {
+        swapOutCount++;
+        Frame& frame = frames[frameNumber];
+        if (frame.occupied) {
+            Process* process = processes[frame.processId];
+            const Page& page_to_swap_out = process->pageTable->getPage(frame.pageNumber);
+
+            cout << "    [SWAP OUT] Processo P" << frame.processId
+                 << ", Página " << frame.pageNumber
+                 << " (Dirty=" << page_to_swap_out.dirty << ")"
+                 << " removida do Quadro " << frameNumber << " (Tempo: " << currentTime << ")" << endl;
+            
+            process->pageTable->invalidatePage(frame.pageNumber);
+
+            frame.occupied = false;
+            frame.processId = -1;
+            frame.pageNumber = -1;
+            frame.referenceBit = false; 
+            frame.loadTime = 0; 
+        }
+    }
+
+    /**
+     * @brief Realiza a operação de swap in de uma página para um quadro.
+     * Incrementa o contador de swap in.
+     * @param processId ID do processo ao qual a página pertence.
+     * @param pageNumber Número da página virtual a ser carregada.
+     * @param frameNumber Número do quadro onde a página será carregada.
+     */
+    void swapIn(int processId, int pageNumber, int frameNumber) {
+        swapInCount++;
+        cout << "    [SWAP IN] Processo P" << processId
+             << ", Página " << pageNumber
+             << " carregada no Quadro " << frameNumber << " (Tempo: " << currentTime << ")" << endl;
+    }
+
+public:
+    /**
+     * @brief Construtor do MemoryManager.
+     * @param page_size_bytes_param Tamanho de cada página em bytes.
+     * @param frame_size_bytes_param Tamanho de cada quadro em bytes.
+     * @param logic_address_size_bits_param Número de bits do endereço lógico.
+     * @param num_frames_in_physical_memory_param Número total de quadros na memória física.
+     * @param max_virtual_memory_size_bytes_param Limite máximo de memória virtual total do sistema.
+     * @param memory_algorithm_param Algoritmo de substituição de página a ser usado (LRU ou Clock).
+     */
     MemoryManager(
-      int page_size_bytes, 
-      int frame_size_bytes, 
-      int logic_address_size_bits,
-      int num_frames_in_physical_memory, 
-      int max_virtual_memory_size,
-      MemoryAlgorithm memory_algorithm) {
-        this->page_size_bytes = page_size_bytes;
-        this->frame_size_bytes = frame_size_bytes;
-        this->logic_address_size_bits = logic_address_size_bits;
-        this->num_frames_in_physical_memory = num_frames_in_physical_memory;
-        this->max_virtual_memory_size = max_virtual_memory_size;
-        this->memory_algorithm = memory_algorithm;
-
+        int page_size_bytes_param,
+        int frame_size_bytes_param,
+        int logic_address_size_bits_param,
+        int num_frames_in_physical_memory_param,
+        long long max_virtual_memory_size_bytes_param,
+        MemoryAlgorithm memory_algorithm_param) :
+        page_size_bytes(page_size_bytes_param),
+        frame_size_bytes(frame_size_bytes_param),
+        logic_address_size_bits(logic_address_size_bits_param),
+        num_frames_in_physical_memory(num_frames_in_physical_memory_param),
+        max_virtual_memory_size_bytes(max_virtual_memory_size_bytes_param),
+        memory_algorithm(memory_algorithm_param),
+        pageFaultCount(0),
+        swapInCount(0),
+        swapOutCount(0),
+        totalMemoryAccesses(0),
+        currentTime(0),
+        current_total_virtual_memory_allocated_bytes(0)
+    {
+        lruAlgorithm = new LRUAlgorithm();
+        clockAlgorithm = new ClockAlgorithm();
         this->_allocate_physical_memory();
-    };
-    ~MemoryManager(){
-      this->_free_physical_memory();
-    };
+        cout << "[MemoryManager] Limite máximo de memória virtual configurado: " << this->max_virtual_memory_size_bytes << " bytes." << endl;
+    }
 
-    void createProcess(int pid, int size) {
-      return;
-    };
-    void accessMemory(int pid, int type, int addr){
-      return;
-    };
-    void executeInstruction(int pid, int type, int operand){
-      return;
-    };
+    /**
+     * @brief Destrutor do MemoryManager.
+     * Libera a memória alocada para os processos e os algoritmos de substituição.
+     */
+    ~MemoryManager() {
+        for (auto& pair : processes) {
+            delete pair.second;
+        }
+        delete lruAlgorithm;
+        delete clockAlgorithm;
+    }
 
+    /**
+     * @brief Cria um novo processo no sistema.
+     * Verifica se o processo já existe e se há espaço na memória virtual total do sistema.
+     * Aloca um novo Process e o adiciona ao mapa de processos.
+     * @param pid ID do novo processo.
+     * @param image_size_bytes Tamanho da imagem do novo processo em bytes.
+     */
+    void createProcess(int pid, int image_size_bytes) {
+        if (processes.find(pid) != processes.end()) {
+            cout << "[ERROR] Processo P" << pid << " já existe!" << endl;
+            return;
+        }
+
+        if (current_total_virtual_memory_allocated_bytes + image_size_bytes > max_virtual_memory_size_bytes) {
+            cout << "[ERROR] Falha ao criar Processo P" << pid << " (tamanho: " << image_size_bytes << " bytes)." << endl;
+            cout << "    Memória virtual total solicitada (" << current_total_virtual_memory_allocated_bytes + image_size_bytes << " bytes)"
+                 << " excederia o limite máximo do sistema (" << max_virtual_memory_size_bytes << " bytes)." << endl;
+            return;
+        }
+
+        Process* newProcess = new Process(pid, image_size_bytes, page_size_bytes);
+        processes[pid] = newProcess;
+        current_total_virtual_memory_allocated_bytes += image_size_bytes;
+
+        cout << "[MemoryManager] Processo P" << pid << " (tamanho: " << image_size_bytes << " bytes) criado com "
+             << newProcess->totalPages << " páginas. Estado: " << processStateToString(newProcess->state) << "." << endl;
+        cout << "    Memória virtual total alocada no sistema: " << current_total_virtual_memory_allocated_bytes << " bytes." << endl;
+    }
+
+    /**
+     * @brief Simula um acesso à memória (R/W) por um processo.
+     * Traduz o endereço virtual, trata page faults se necessário, e atualiza
+     * os bits de referência/dirty e metadados dos algoritmos de substituição.
+     * @param pid ID do processo que está acessando a memória.
+     * @param type Tipo de acesso (R ou W).
+     * @param addr Endereço virtual a ser acessado.
+     */
+    void accessMemory(int pid, char type, int addr) {
+        totalMemoryAccesses++;
+        currentTime++; 
+
+        if (processes.find(pid) == processes.end()) {
+            cout << "[ERROR] Processo P" << pid << " não existe! (Tempo: " << currentTime << ")" << endl;
+            return;
+        }
+
+        Process* process = processes[pid];
+        ProcessState originalState = process->state;
+        process->state = RUNNING; 
+
+        if (addr < 0 || addr >= process->imageSize ) {
+            cout << "[ERROR] Endereço " << addr << " fora dos limites para o Processo P" << pid
+                 << " (Tamanho: " << process->imageSize << " bytes, Estado: " << processStateToString(process->state) << ", Tempo: " << currentTime << ")" << endl;
+            process->state = originalState; 
+            return;
+        }
+
+        auto [pageNumber, offset] = translateVirtualAddress(addr);
+
+        cout << "[ACESSO] P" << pid << " (" << processStateToString(process->state) << ") " 
+             << type << " End:" << addr << " (Página: " << pageNumber << ", Offset: " << offset << ", Tempo: " << currentTime << ")" << endl;
+
+        bool pageLoaded = process->pageTable->isPageLoaded(pageNumber);
+
+        if (!pageLoaded) {
+            handlePageFault(pid, pageNumber);
+            pageLoaded = process->pageTable->isPageLoaded(pageNumber);
+            if (!pageLoaded) {
+                 cout << "[ERROR CRÍTICO] Falha ao carregar página " << pageNumber << " para P" << pid << " após page fault. (Tempo: " << currentTime << ")" << endl;
+                 process->state = READY; 
+                 return;
+            }
+        }
+        
+        int frameNumber = process->pageTable->getFrameNumber(pageNumber);
+
+        if (frameNumber >= 0) { 
+            process->pageTable->setReferenced(pageNumber, true, currentTime);
+
+            if (type == 'W') {
+                process->pageTable->setDirty(pageNumber, true);
+                 cout << "    [MODIFICADO] Página " << pageNumber << " do Processo P" << pid << " marcada como dirty." << endl;
+            }
+
+            if (memory_algorithm == LRU) {
+                lruAlgorithm->updateAccessTime(frameNumber, frames, this->currentTime);
+            } else { 
+                clockAlgorithm->setReferenceBit(frameNumber, frames, true);
+            }
+        } else {
+             cout << "[ERROR CRÍTICO] Página " << pageNumber << " do Processo P" << pid << " não encontrada em um quadro após tentativa de carga! (Tempo: " << currentTime << ")" << endl;
+        }
+        
+        process->lastPageAccessed = pageNumber;
+        process->state = READY; 
+    }
+
+    /**
+     * @brief Simula a execução de uma instrução de CPU ou uma operação de E/S por um processo.
+     * Atualiza o estado do processo de acordo com o tipo de instrução.
+     * @param pid ID do processo executando a instrução.
+     * @param type Tipo de instrução (P para CPU, I para E/S).
+     * @param operand Operando da instrução.
+     */
+    void executeInstruction(int pid, char type, int operand) {
+        currentTime++; 
+        if (processes.find(pid) == processes.end()) {
+            cout << "[ERROR] Processo P" << pid << " não existe! (Tempo: " << currentTime << ")" << endl;
+            return;
+        }
+        
+        Process* process = processes[pid];
+        process->state = RUNNING; 
+
+        if (type == 'P') {
+            cout << "[CPU] Processo P" << pid << " (" << processStateToString(process->state) 
+                 << ") executando instrução (operando: " << operand << ", Tempo: " << currentTime << ")" << endl;
+            process->state = READY; 
+        } else if (type == 'I') {
+            cout << "[I/O] Processo P" << pid << " (" << processStateToString(process->state) 
+                 << ") executando E/S (dispositivo: " << operand << ", Tempo: " << currentTime << ")" << endl;
+            process->state = SUSPENDED; 
+        }
+    }
+
+    /**
+     * @brief Imprime o estado atual da memória física e secundária, e o estado dos processos.
+     * Mostra quais páginas estão em quais quadros, quais estão em swap, e o estado de cada processo.
+     */
+    void printMemoryState() {
+        cout << "\n========== ESTADO DA MEMÓRIA (Tempo: " << currentTime << ") ==========" << endl;
+        cout << "Memória Física (" << num_frames_in_physical_memory << " quadros de " << frame_size_bytes << " bytes):" << endl;
+        for (int i = 0; i < num_frames_in_physical_memory; i++) {
+            cout << "  Quadro " << i << ": ";
+            if (frames[i].occupied) {
+                cout << "Processo P" << frames[i].processId
+                     << ", Página " << frames[i].pageNumber;
+                if (memory_algorithm == CLOCK) {
+                    cout << " (Referenced=" << frames[i].referenceBit << ")";
+                } else { 
+                    cout << " (LoadTime=" << frames[i].loadTime << ")";
+                }
+            } else {
+                cout << "Livre";
+            }
+            cout << endl;
+        }
+
+        cout << "\nMemória Secundária (Páginas não carregadas):" << endl;
+        bool anySwapped = false;
+        for (auto& pair : processes) {
+            Process* process = pair.second;
+            vector<int> swappedPagesNumbers; 
+
+            for (const auto& page : process->pageTable->getPages()) {
+                if (!page.valid) {
+                    swappedPagesNumbers.push_back(page.pageNumber);
+                }
+            }
+            
+            if (!swappedPagesNumbers.empty()) {
+                anySwapped = true;
+                cout << "  Processo P" << process->processId << ": Páginas [";
+                for (size_t i = 0; i < swappedPagesNumbers.size(); i++) {
+                    int pageNum = swappedPagesNumbers[i];
+                    const Page& p_struct = process->pageTable->getPage(pageNum); 
+                    cout << pageNum << "(Dirty=" << p_struct.dirty << ")";
+                    if (i < swappedPagesNumbers.size() - 1) cout << ", ";
+                }
+                cout << "]" << endl;
+            }
+        }
+        if (!anySwapped) {
+            cout << "  Nenhuma página em memória secundária." << endl;
+        }
+
+        cout << "\nEstado dos Processos:" << endl;
+        if (processes.empty()) {
+            cout << "  Nenhum processo no sistema." << endl;
+        } else {
+            for (auto& pair : processes) {
+                Process* process = pair.second;
+                cout << "  Processo P" << process->processId 
+                     << ": " << processStateToString(process->state)
+                     << " (Páginas: " << process->totalPages 
+                     << ", Tamanho: " << process->imageSize << " bytes)" << endl;
+            }
+        }
+        cout << "Memória Virtual Total Alocada: " << current_total_virtual_memory_allocated_bytes << " / " << max_virtual_memory_size_bytes << " bytes." << endl;
+
+        cout << "\n================= FIM ESTADO MEMÓRIA =================\n" << endl;
+    }
+
+    /**
+     * @brief Imprime as tabelas de páginas de todos os processos.
+     */
+    void printPageTables() {
+        cout << "\n========== TABELAS DE PÁGINAS (Tempo: " << currentTime << ") ==========" << endl;
+        for (auto& pair : processes) {
+            pair.second->pageTable->printTable();
+        }
+        cout << "\n================= FIM TABELAS ==================\n" << endl;
+    }
+
+    /**
+     * @brief Imprime as estatísticas da simulação.
+     * Inclui número de page faults, swaps, acessos à memória, taxa de hit e tempo total simulado.
+     */
+    void printStatistics() {
+        cout << "\n========== ESTATÍSTICAS (Final - Tempo: " << currentTime << ") ==========" << endl;
+        cout << "Page Faults: " << pageFaultCount << endl;
+        cout << "Operações de Swap In: " << swapInCount << endl;
+        cout << "Operações de Swap Out: " << swapOutCount << endl;
+        cout << "Total de Acessos à Memória (operações R/W): " << totalMemoryAccesses << endl;
+
+        if (totalMemoryAccesses > 0) {
+            double hitRate = ((double)(totalMemoryAccesses - pageFaultCount) / totalMemoryAccesses) * 100.0;
+            cout << "Taxa de Hit (para R/W): " << fixed << setprecision(1) << hitRate << "%" << endl;
+        }
+
+        cout << "Algoritmo usado: " << (memory_algorithm == LRU ? "LRU" : "Clock") << endl;
+        cout << "Total de tempo lógico simulado: " << currentTime << " unidades." << endl;
+        cout << "\n============== FIM ESTATÍSTICAS ===============\n" << endl;
+    }
+
+    /**
+     * @brief Carrega e processa um arquivo de entrada contendo comandos para o simulador.
+     * Lê cada linha do arquivo, parseia o comando e o executa através dos métodos apropriados do MemoryManager.
+     * @param filename O nome do arquivo de entrada.
+     */
     void loadInputFile(const string& filename) {
-      ifstream infile(filename);
-      string line;
-      while (getline(infile, line)) {
-          istringstream iss(line);
-          string pidStr;
-          char type;
-          string arg1;
+        ifstream infile(filename);
+        if (!infile.is_open()) {
+            cerr << "[ERROR] Não foi possível abrir o arquivo: " << filename << endl;
+            return;
+        }
 
-          iss >> pidStr >> type >> arg1;
-          int pid = stoi(pidStr.substr(1));
+        string line;
+        int lineNumber = 0;
+        cout << "\n========== PROCESSANDO ARQUIVO (" << filename << ") ==========" << endl;
 
-          if (type == 'C') {
-              int size = stoi(arg1);
-              this->createProcess(pid, size);
-              cout << "[MemoryManager] " << "Creating process with pid=" << pid <<", size=" << size << "." << endl;
-          } 
-          else if (type == 'R' || type == 'W') {
-              if (arg1[0] == 'b') {
-                  int addr = stoi(arg1.substr(1), nullptr, 2);
-                  this->accessMemory(pid, type, addr);
-                  cout << "[MemoryManager] " << "Accessing memory with pid=" << pid << ", type=" << type << ", addr=" << addr << endl;
-              } else {
-                  cerr << "[MemoryManager] [ERROR] Invalid address: " << arg1 << endl;
-              }
-          } 
-          else if (type == 'P' || type == 'I') {
-              if (arg1[0] == 'b') {
-                  int operand = stoi(arg1.substr(1), nullptr, 2);
-                  this->executeInstruction(pid, type, operand);
-                  cout << "[MemoryManager] " << "Executing instruction with pid=" << pid << ", type=" << type << ", operand=" << operand << endl;
-              } else {
-                  cerr << "[MemoryManager] [ERROR] Invalid operand: " << arg1 << endl;
-              }
-          }
-      }
+        while (getline(infile, line)) {
+            lineNumber++;
+
+            line.erase(0, line.find_first_not_of(" \t\r\n"));
+            line.erase(line.find_last_not_of(" \t\r\n") + 1);
+
+            if (line.empty() || line[0] == '#') {
+                continue;
+            }
+            
+            size_t source_pos = line.find("] ");
+            if (line[0] == '[' && source_pos != string::npos) {
+                line = line.substr(source_pos + 2);
+            }
+
+            stringstream ss(line);
+            string processName, operation, operand;
+
+            if (!(ss >> processName >> operation >> operand)) {
+                cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Formato inválido (esperado: PID OP OPERANDO)" << endl;
+                continue;
+            }
+
+            if (operation.length() != 1) {
+                cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Operação deve ter 1 caractere" << endl;
+                continue;
+            }
+
+            if (processName[0] != 'P' || !isValidDecimal(processName.substr(1))) {
+                cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Nome de processo inválido (esperado: P<num>)" << endl;
+                continue;
+            }
+
+            int pid = stoi(processName.substr(1));
+            char op = operation[0];
+
+            cout << "\n[COMANDO " << lineNumber << "] " << processName << " " << op << " " << operand << endl;
+            
+            if (processes.count(pid) && processes[pid]->state == SUSPENDED && (op == 'R' || op == 'W' || op == 'P')) {
+                cout << "    [AVISO] Processo P" << pid << " está SUSPENSO mas recebeu comando '" << op << "'. O comando será processado." << endl;
+            }
+
+            switch (op) {
+                case 'C': { // Criação de processo
+                    if (!isValidDecimal(operand)) {
+                        cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Tamanho deve ser número decimal para operação 'C'" << endl;
+                        continue;
+                    }
+                    int size = stoi(operand);
+                    if (size <= 0) {
+                        cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Tamanho deve ser positivo para operação 'C'" << endl;
+                        continue;
+                    }
+                    this->createProcess(pid, size);
+                    printMemoryState(); 
+                    break;
+                }
+
+                case 'R': // Operação de leitura
+                case 'W': { // Operação de escrita
+                    int addr;
+                    if (isTypeAFormat(operand)) { // Endereço tipo decimal (x)2
+                        string numPart = operand.substr(1, operand.length() - 3);
+                        if (!isValidDecimal(numPart)) {
+                            cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Número inválido no formato (x)2 para operação '" << op << "'" << endl;
+                            continue;
+                        }
+                        addr = convertTypeAAddress(operand);
+                    } else { // Endereço tipo binário
+                        if (!isValidBinary(operand)) {
+                            cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Endereço binário inválido para operação '" << op << "'" << endl;
+                            continue;
+                        }
+                        addr = convertTypeBAddress(operand);
+                    }
+                    this->accessMemory(pid, op, addr);
+                    printMemoryState(); 
+                    break;
+                }
+
+                case 'P': // Instrução de CPU
+                case 'I': { // Operação de E/S
+                    int operandValue;
+                    if (isTypeAFormat(operand)) { // Operando tipo decimal (x)2
+                        string numPart = operand.substr(1, operand.length() - 3);
+                        if (!isValidDecimal(numPart)) {
+                            cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Número inválido no formato (x)2 para operação '" << op << "'" << endl;
+                            continue;
+                        }
+                        operandValue = convertTypeAAddress(operand);
+                    } else { // Operando tipo binário
+                        if (!isValidBinary(operand)) {
+                            cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Operando binário inválido para operação '" << op << "'" << endl;
+                            continue;
+                        }
+                        operandValue = convertTypeBAddress(operand);
+                    }
+                    this->executeInstruction(pid, op, operandValue);
+                    printMemoryState(); 
+                    break;
+                }
+
+                default:
+                    cout << "ERRO na linha " << lineNumber << " (\"" << line << "\"): Operação '" << op
+                         << "' não reconhecida" << endl;
+                    continue;
+            }
+        }
+
+        infile.close();
+        printPageTables();
+        printStatistics();
+        cout << "\n=============== FIM ARQUIVO ==============\n" << endl;
     }
 };
 
