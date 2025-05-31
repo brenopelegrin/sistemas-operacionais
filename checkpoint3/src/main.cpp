@@ -973,12 +973,140 @@ public:
         cout << "\n=============== FIM ARQUIVO ==============\n" << endl;
     }
 };
+// Função para remover espaços em branco de uma string (início e fim)
+std::string trim(const std::string& str) {
+    const std::string whitespace = " \t\n\r\f\v";
+    size_t start = str.find_first_not_of(whitespace);
+    if (start == std::string::npos) {
+        return ""; // String vazia ou apenas espaços em branco
+    }
+    size_t end = str.find_last_not_of(whitespace);
+    return str.substr(start, end - start + 1);
+}
 
-int main(int argc, char* argv[]){
-  std::cout << "Hello World!" << std::endl;
-  enum MemoryAlgorithm algorithm = CLOCK;
-  MemoryManager mm(1, 100, 1, 50, 5, algorithm);
-  std::string filename = "data/input.txt";
-  mm.loadInputFile(filename);
-  return 0;
+// Fnção para mostrar a mensagem de help
+void print_help(const char* program_name) {
+    std::cout << "\nUso: " << program_name << " [opções] <arquivo_de_entrada>\n\n";
+    std::cout << "Simulador de Memória Virtual.\n\n";
+    std::cout << "Argumentos posicionais obrigatórios:\n";
+    std::cout << "  <arquivo_de_entrada>            Caminho para o arquivo contendo as instruções de simulação.\n\n";
+    std::cout << "Opções (argumentos de palavra-chave):\n";
+    std::cout << "  --page_size <bytes>             Tamanho de cada página em bytes (ex: 4096). Padrão: 4096.\n";
+    std::cout << "  --frame_size <bytes>            Tamanho de cada quadro em bytes. Padrão: igual ao page_size.\n";
+    std::cout << "  --logic_address_size <bits>     Número de bits no endereço lógico (ex: 16 bits). Padrão: 16.\n";
+    std::cout << "  --num_frames <num>              Número total de quadros na memória física (ex: 8). Padrão: 8.\n";
+    std::cout << "  -h, --help                      Mostra esta mensagem de ajuda e sai.\n\n";
+    std::cout << "Exemplo:\n";
+    std::cout << "  " << program_name << " --page_size 8192 --num_frames 4 entrada.txt\n";
+}
+
+/**
+ * @brief Função principal do simulador de memória virtual.
+ * Configura os parâmetros iniciais do sistema, instancia o MemoryManager,
+ * e carrega o arquivo de entrada para iniciar a simulação.
+ * @param argc Número de args da linha de comando.
+ * @param argv Vetor de strings dos args.
+ * @return 0 se a execução for bem-sucedida, um código de erro caso contrário.
+ */
+int main(int argc, char* argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg == "--help" || arg == "-h") {
+            print_help(argv[0]);
+            return 0;
+        }
+    }
+
+    int pageSize = 4096;        
+    int frameSize = pageSize; 
+    int logicAddressBits = 16; 
+    int numFrames = 8;          
+    int maxVirtualMemorySystem = pageSize * (numFrames * 2); 
+    MemoryAlgorithm algorithm = LRU;
+    std::string input_filename = "data/input.txt";
+
+    std::vector<std::string> positional_args;
+    std::unordered_map<std::string, std::string> keyword_args_map;
+
+    // Faz o parsing dos argumentos
+    for (int i = 1; i < argc; ++i) {
+        std::string arg = argv[i];
+        if (arg.rfind("--", 0) == 0) {
+            std::string key = arg.substr(2);
+            if (i + 1 < argc) {
+                std::string next_arg = argv[i + 1];
+                if (next_arg.rfind("--", 0) != 0 && next_arg.rfind("-",0) !=0) {
+                    keyword_args_map[key] = trim(next_arg);
+                    i++;
+                } else {
+                    std::cerr << "[AVISO] Argumento '" << arg << "' fornecido sem valor. Ignorando." << std::endl;
+                }
+            } else {
+                std::cerr << "[AVISO] Argumento '" << arg << "' fornecido sem valor. Ignorando." << std::endl;
+            }
+        } else {
+            positional_args.push_back(trim(arg));
+        }
+    }
+
+    if (positional_args.size() == 1) {
+        input_filename = positional_args[0];
+    } else if (positional_args.empty()) {
+        std::cerr << "[ERRO] Arquivo de entrada não fornecido.\n";
+        print_help(argv[0]);
+        return 1;
+    } else {
+        std::cerr << "[ERRO] Múltiplos argumentos posicionais fornecidos. Esperado apenas um: <arquivo_de_entrada>.\n";
+        print_help(argv[0]);
+        return 1;
+    }
+    
+    try {
+        if (keyword_args_map.count("page_size")) {
+            pageSize = std::stoi(keyword_args_map["page_size"]);
+        }
+        if (keyword_args_map.count("frame_size")) {
+            frameSize = std::stoi(keyword_args_map["frame_size"]);
+        } else if (keyword_args_map.count("page_size")) { 
+            frameSize = pageSize;
+        }
+        if (keyword_args_map.count("logic_address_size")) {
+            logicAddressBits = std::stoi(keyword_args_map["logic_address_size"]);
+        }
+        if (keyword_args_map.count("num_frames")) {
+            numFrames = std::stoi(keyword_args_map["num_frames"]);
+        }
+    } catch (const std::invalid_argument& e) {
+        std::cerr << "[ERRO] Argumento inválido para conversão numérica fornecido para uma das opções: " << e.what() << std::endl;
+        print_help(argv[0]);
+        return 1;
+    } catch (const std::out_of_range& e) {
+        std::cerr << "[ERRO] Valor numérico fora do intervalo fornecido para uma das opções: " << e.what() << std::endl;
+        print_help(argv[0]);
+        return 1;
+    }
+    
+    if (pageSize <= 0 || frameSize <= 0 || logicAddressBits <= 0 || numFrames <= 0) {
+        std::cerr << "[ERRO] page_size, frame_size, logic_address_size e num_frames devem ser valores positivos." << std::endl;
+        print_help(argv[0]);
+        return 1;
+    }
+
+    std::cout << "========== SIMULADOR DE MEMÓRIA VIRTUAL ==========" << std::endl;
+    std::cout << "\nConfigurações do sistema:" << std::endl;
+    std::cout << "  Arquivo de entrada: " << input_filename << std::endl;
+    std::cout << "  Tamanho da página: " << pageSize << " bytes (" << pageSize / 1024.0 << " KB)" << std::endl;
+    std::cout << "  Tamanho do quadro: " << frameSize << " bytes (" << frameSize / 1024.0 << " KB)" << std::endl;
+    std::cout << "  Número de quadros na memória física: " << numFrames << std::endl;
+    std::cout << "  Tamanho total da memória física: " << static_cast<long long>(numFrames) * frameSize / 1024.0 << " KB" << std::endl;
+    std::cout << "  Algoritmo de substituição: " << (algorithm == LRU ? "LRU" : "Clock") << std::endl;
+    std::cout << "  Tamanho dos endereços lógicos: " << logicAddressBits << " bits" << std::endl;
+    std::cout << "  Limite máximo de memória virtual (calculado): " << maxVirtualMemorySystem / 1024.0 << " KB (" << maxVirtualMemorySystem << " bytes)" << std::endl;
+    std::cout << "\n=================================================\n" << std::endl;
+
+    MemoryManager mm(pageSize, frameSize, logicAddressBits, numFrames, maxVirtualMemorySystem, algorithm);
+    
+    mm.loadInputFile(input_filename);
+
+    return 0;
 }
