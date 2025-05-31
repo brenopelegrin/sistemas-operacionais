@@ -3,6 +3,12 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <unordered_map>
+#include <queue>
+#include <algorithm>
+#include <iomanip>
+#include <climits>
+#include <regex>
 
 using namespace std;
 
@@ -247,6 +253,110 @@ struct Process {
      */
     ~Process() {
         delete pageTable;
+    }
+};
+
+/**
+ * @class LRUAlgorithm
+ * @brief Implementação do algoritmo de substituição de páginas LRU (Least Recently Used).
+ * Seleciona a página que não foi utilizada por mais tempo como vítima para substituição.
+ */
+class LRUAlgorithm {
+public:
+    /**
+     * @brief Construtor do algoritmo LRU.
+     */
+    LRUAlgorithm() {}
+
+    /**
+     * @brief Seleciona um quadro vítima para substituição usando LRU.
+     * O quadro vítima é aquele que teve a página carregada (ou referenciada) há mais tempo.
+     * @param frames Vetor de frames.
+     * @return O número do quadro vítima selecionado. Retorna -1 se nenhum quadro ocupado for encontrado.
+     */
+    int selectVictimFrame(const vector<Frame>& frames) {
+        int oldestTime = INT_MAX;
+        int victimFrame = -1;
+
+        for (const auto& frame : frames) {
+            // aqui reutilizamos o loadTime como o lastAccessTime para o algoritmo LRU
+            if (frame.occupied && frame.loadTime < oldestTime) { 
+                oldestTime = frame.loadTime;
+                victimFrame = frame.frameNumber;
+            }
+        }
+        if (victimFrame == -1 && !frames.empty()) {
+             for (const auto& frame : frames) { if(frame.occupied) return frame.frameNumber;}
+        }
+        return victimFrame;
+    }
+
+    /**
+     * @brief Atualiza o tempo de lastAccess de um quadro.
+     * Chamado quando uma página em um quadro é acessada.
+     * @param frameNumber O número do quadro que foi acessado.
+     * @param frames Referência ao vetor de frames.
+     * @param globalCurrentTime Referência ao clock global do MemoryManager, usado para marcar o tempo de acesso.
+     */
+    void updateAccessTime(int frameNumber, vector<Frame>& frames, int& globalCurrentTime) {
+        if (frameNumber >= 0 && frameNumber < static_cast<int>(frames.size())) {
+            frames[frameNumber].loadTime = globalCurrentTime;
+        }
+    }
+};
+
+/**
+ * @class ClockAlgorithm
+ * @brief Implementação do algoritmo de substituição de páginas Clock.
+ * Usa um ponteiro circular e um bit de referência para selecionar uma página vítima.
+ */
+class ClockAlgorithm {
+private:
+    int clockPointer; // clock, indica o próximo frame a ser inspecionado.
+
+public:
+    /**
+     * @brief Construtor do algoritmo Clock.
+     * Inicializa o clock em 0.
+     */
+    ClockAlgorithm() : clockPointer(0) {}
+
+    /**
+     * @brief Seleciona um quadro vítima para substituição usando o algoritmo Clock.
+     * Percorre os quadros em um buffer circular. Se um quadro tem o bit de referência 0, ele é escolhido.
+     * Se o bit for 1, ele é resetado para 0 e o ponteiro é incrementado (dá uma segunda chance).
+     * @param frames Referência ao vetor de frames. O algoritmo modifica os bits de referência, então pode ter efeitos colaterais.
+     * @return O número do quadro vítima selecionado. Retorna -1 se o vetor frames estiver vazio.
+     */
+    int selectVictimFrame(vector<Frame>& frames) {
+        if (frames.empty()) return -1;
+        while (true) {
+            if (static_cast<int>(frames.size()) == 0) return -1;
+            clockPointer = clockPointer % static_cast<int>(frames.size());
+
+            if (frames[clockPointer].occupied) {
+                if (!frames[clockPointer].referenceBit) { // se o bit de referência é 0, então é usado como vítima
+                    int victim = clockPointer;
+                    clockPointer = (clockPointer + 1) % static_cast<int>(frames.size());
+                    return victim;
+                } else {
+                    frames[clockPointer].referenceBit = false; // dá uma segunda chance (reseta o bit)
+                }
+            }
+            clockPointer = (clockPointer + 1) % static_cast<int>(frames.size()); // avança o ptr
+        }
+    }
+
+    /**
+     * @brief Define o bit de referência de um quadro específico.
+     * @param frameNumber O número do quadro.
+     * @param frames Referência ao vetor de frames.
+     * @param value O valor para o bit de referência (true ou false).
+     */
+    void setReferenceBit(int frameNumber, vector<Frame>& frames, bool value) {
+        if (frameNumber >= 0 && frameNumber < static_cast<int>(frames.size())) {
+            frames[frameNumber].referenceBit = value;
+        }
     }
 };
 
