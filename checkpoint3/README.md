@@ -1,8 +1,8 @@
 # checkpoint3
 
-Nesse diretório, estão disponíveis os códigos relacionados a entrega do **Checkpoint 3**. Essa entrega consiste em um simulador de gerenciamento de
-memória que permite ler uma série de instruções de um arquivo e executá-las, simulando operações de R/W e I/O, e considerando um sistema de paginação
-com dois algoritmos de substituição de páginas implementados: LRU (Least Recently Used) e Clock.
+Nesse diretório, estão disponíveis os códigos relacionados à entrega do **Checkpoint 3**. Essa entrega consiste em um simulador de gerenciamento de memória virtual que implementa o sistema de paginação. O objetivo principal é executar uma sequência de operações de memória (leitura, escrita) e instruções de CPU ou E/S, lidas de um arquivo de entrada. O simulador gerencia múltiplos processos, cada um com seu próprio espaço de endereçamento virtual e tabela de páginas.
+
+O sistema lida com page faults e usa algoritmos de substituição de páginas para decidir qual página remover da memória física quando um novo quadro é necessário e não há outros quadros livres. Foram implementados dois algoritmos clássicos para essa finalidade: LRU (Least Recently Used), que substitui a página menos recentemente usada, e Clock, que utiliza um bit de referência para dar uma segunda chance às páginas antes de substituí-las. Durante a simulação, são apresentadas informações sobre o estado atual do sistema e, ao final, é mostrado um resumo geral do desempenho com algumas estatísticas, como número de page faults e taxa de acerto (hit rate).
 
 ## Estrutura
 
@@ -14,7 +14,7 @@ do projeto.
 A estrutura do projeto é a seguinte:
 
 ```bash
-checkpoint2
+checkpoint3
 ├── Dockerfile                # Arquivo da imagem Docker
 ├── Makefile                  # Arquivo com instruções para compilação automática
 ├── README.md                 # Documentação do projeto
@@ -49,7 +49,7 @@ docker build -t so-icmc/checkpoint3:latest .
 2. Após fazer o build, execute a imagem ``so-icmc/checkpoint3:latest`` para rodar os programas e obter as métricas:
 
 ```bash
-docker rm -f checkpoint3 && docker run --name checkpoint2 so-icmc/checkpoint3:latest
+docker rm -f checkpoint3 && docker run --name checkpoint3 so-icmc/checkpoint3:latest
 ```
 
 Se quiser executar tudo em um comando só (assumindo que você já está no diretório ``checkpoint3``), faça:
