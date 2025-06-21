@@ -95,7 +95,9 @@ export default function Checkpoint3ResultsPage(){
         </Center>
         )
     } else{
-        const result = localData['result'];
+        const result = localData['result']
+        const result_stdout = localData['result'][0];
+        const result_stderr = localData['result'][1];
         const id = localData['id'];
         const text="Lorem ipsum dolor at simet";
         return(
@@ -117,13 +119,24 @@ export default function Checkpoint3ResultsPage(){
                 </Stack>
             </Stack>
             <BoxInfo 
-                title="Program output"
+                title="Program standard output (stdout)"
                 bgColor={useColorModeValue('gray.100', 'gray.700')}
                 icon={<WarningIcon/>}
                 maxWidth='90vw'
                 boxText={
-                    <Text fontFamily='monospace' maxHeight='55vh' paddingX="1vw" textOverflow={'scroll'} overflowY={'scroll'}>
-                        {JSON.stringify(result)}
+                    <Text whiteSpace="pre-wrap" fontFamily='monospace' maxHeight='55vh' paddingX="1vw" textOverflow={'scroll'} overflowY={'scroll'}>
+                        {result_stdout}
+                    </Text>
+                }
+            />
+            <BoxInfo 
+                title="Program standard error (stderr)"
+                bgColor={useColorModeValue('red.100', 'red.700')}
+                icon={<WarningIcon/>}
+                maxWidth='90vw'
+                boxText={
+                    <Text whiteSpace="pre-wrap" fontFamily='monospace' maxHeight='55vh' paddingX="1vw" textOverflow={'scroll'} overflowY={'scroll'}>
+                        {result_stderr}
                     </Text>
                 }
             />

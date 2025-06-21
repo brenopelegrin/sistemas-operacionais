@@ -39,8 +39,8 @@ export async function make_checkpoint3_post({x, y}: TestArgs){
   const response = await axios.post(baseURL+'/task', {
     "type": "soicmc.main.run_checkpoint3",
     "args": {
-        "x": 1,
-        "y": 2,
+        "x": 1.05,
+        "y": 2.03,
       }
   });
   return response;

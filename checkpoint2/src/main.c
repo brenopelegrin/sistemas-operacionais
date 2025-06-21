@@ -9,8 +9,11 @@
 #define PRODUCER_WAIT_TIME_US 200000 // 20 milisegundos
 #define CONSUMER_WAIT_TIME_US 100000 // 10 milisegundos
 
+#define MAXIMUM_ITEMS_PRODUCED 250
+
 int* buffer[BUFFER_SIZE];
 int flag;
+int produced_items_counter = 0;
 
 // Semáforos e mutexes
 sem_t sem_empty; // conta quantos espaços livres existem
@@ -54,6 +57,11 @@ void* producer(void* arg) {
     // Fim da produção
 
     local_generation_count++; // incrementa contador 
+    produced_items_counter++;
+    if(produced_items_counter > MAXIMUM_ITEMS_PRODUCED){
+      printf("[debug] produtor: atingiu limite máximo de produção. Encerrando program.\n");
+      exit(0);
+    }
 
     queue_insert(Q_occupied, available_ptr, &flag); // coloca o endereço da fila de ocupados
     printf("[debug] produtor: item produzido, endereço %p, valor %d.\n", (void*)available_ptr, *available_ptr);

@@ -35,5 +35,9 @@ def run_command(command, cwd=None, log_stdout=True, log_stderr=True, timeout_sec
             logger.error(content)
         stderr.append(content)
     
-    process.wait(timeout=timeout_sec)
+    try:
+        process.wait(timeout=timeout_sec)
+    except subprocess.TimeoutExpired:
+        process.terminate()
+    
     return "\n".join(stdout), "\n".join(stderr)

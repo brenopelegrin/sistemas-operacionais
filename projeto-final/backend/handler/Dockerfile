@@ -18,7 +18,10 @@ COPY . /app
 
 # Setup other dependencies for running checkpoint1, checkpoint2, checkpoint3
 RUN apt-get update -yq
-RUN apt-get install -yq strace time build-essential python3 python3-pip
+RUN apt-get install -yq strace time build-essential python3 python3-pip software-properties-common
+RUN add-apt-repository -y ppa:ubuntu-toolchain-r/test
+RUN apt-get update -yq
+RUN apt-get install -yq --only-upgrade libstdc++6
 
 # Setup Python-related things
 ARG pytasks_taskpacks_manager_INSTALL_PACKAGES
