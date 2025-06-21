@@ -9,7 +9,7 @@
 #define FILE_COUNT 100
 
 // Number of times to write to each file
-#define WRITE_TIMES 2000
+#define WRITE_TIMES 200
 #define WRITE_DATA "Testing string blah blah blah.\n"
 
 // Directory to use for writing files

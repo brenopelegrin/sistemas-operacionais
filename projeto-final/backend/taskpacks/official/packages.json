@@ -1,0 +1,32 @@
+{
+    "physicsjs": {
+        "name": "physicsjs",
+        "author": "brenopelegrin",
+        "version": "1.0",
+        "link": "https://github.com/brenopelegrin/pytasks-physicsjs/archive/refs/heads/master.zip"
+    },
+    "test": {
+        "name": "test",
+        "author": "brenopelegrin",
+        "version": "1.0",
+        "link": "https://github.com/brenopelegrin/pytasks-test/archive/refs/heads/master.zip"
+    },
+    "whisper": {
+        "name": "whisper",
+        "author": "brenopelegrin",
+        "version": "1.0",
+        "link": "https://github.com/brenopelegrin/pytasks-whisper/archive/refs/heads/taskpack-dist.zip"
+    },
+    "subtitles": {
+        "name": "subtitles",
+        "author": "brenopelegrin",
+        "version": "1.0",
+        "link": "https://github.com/brenopelegrin/pytasks-subtitles/archive/refs/heads/main.zip"
+    },
+    "soicmc": {
+        "name": "soicmc",
+        "author": "brenopelegrin",
+        "version": "1.0",
+        "link": "https://github.com/brenopelegrin/pytasks-soicmc/archive/refs/heads/main.zip"
+    }
+}

@@ -11,7 +11,7 @@
 #define TEST_STRING "Testing string to write blah blah blah\n"
 #define MAX_INPUT_SIZE 256
 #define FILE_NAME "test_file.txt"
-#define N_ITERATIONS 1000
+#define N_ITERATIONS 100
 #define FILE_OPEN_SUCCESS "File opened successfully!\n"
 #define FILE_CLOSE_SUCCESS "File closed successfully!\n"
 #define WRITE_SUCESS "Written succesfully!\n"

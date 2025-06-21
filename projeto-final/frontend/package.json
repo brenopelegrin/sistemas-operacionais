@@ -1,30 +1,38 @@
 {
-  "name": "frontend",
+  "name": "test-react",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "build": "react-router build",
-    "dev": "react-router dev",
-    "start": "react-router-serve ./build/server/index.js",
-    "typecheck": "react-router typegen && tsc"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@react-router/node": "^7.5.3",
-    "@react-router/serve": "^7.5.3",
-    "isbot": "^5.1.27",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
-    "react-router": "^7.5.3"
+    "@chakra-ui/icons": "^2.0.14",
+    "@chakra-ui/react": "^2.4.4",
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
+    "@types/react-plotly.js": "^2.5.2",
+    "@types/styled-components": "^5.1.26",
+    "axios": "^1.2.1",
+    "framer-motion": "^7.10.2",
+    "plotly.js": "^2.17.0",
+    "polished": "^4.2.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^4.7.1",
+    "react-plotly.js": "^2.6.0",
+    "react-query": "^3.39.2",
+    "react-router-dom": "^6.5.0",
+    "react-switch": "^7.0.0",
+    "styled-components": "^5.3.6"
   },
   "devDependencies": {
-    "@react-router/dev": "^7.5.3",
-    "@tailwindcss/vite": "^4.1.4",
-    "@types/node": "^20",
-    "@types/react": "^19.1.2",
-    "@types/react-dom": "^19.1.2",
-    "tailwindcss": "^4.1.4",
-    "typescript": "^5.8.3",
-    "vite": "^6.3.3",
-    "vite-tsconfig-paths": "^5.1.4"
+    "@types/react": "^18.0.24",
+    "@types/react-dom": "^18.0.8",
+    "@vitejs/plugin-react": "^2.2.0",
+    "typescript": "^4.6.4",
+    "vite": "^3.2.0"
   }
 }

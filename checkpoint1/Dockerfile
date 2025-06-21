@@ -1,13 +1,13 @@
 FROM gcc:14.2.0-bookworm AS buildstage
 LABEL stage="builder"
-COPY entrypoint.sh /usr/app/entrypoint.sh
-RUN mkdir -p /usr/app
-RUN mkdir -p /usr/app/bin
-RUN mkdir -p /usr/app/build
-RUN mkdir -p /usr/app/src
-COPY ./Makefile /usr/app
-COPY ./src /usr/app/src
-WORKDIR /usr/app
+COPY entrypoint.sh /usr/app/checkpoint1/entrypoint.sh
+RUN mkdir -p /usr/app/checkpoint1
+RUN mkdir -p /usr/app/checkpoint1/bin
+RUN mkdir -p /usr/app/checkpoint1/build
+RUN mkdir -p /usr/app/checkpoint1/src
+COPY ./Makefile /usr/app/checkpoint1
+COPY ./src /usr/app/checkpoint1/src
+WORKDIR /usr/app/checkpoint1
 
 # Compile each syscall module
 RUN make io-and-files && cp ./build/io-and-files.o ./bin/io-and-files
@@ -21,5 +21,5 @@ RUN make clean
 
 FROM ubuntu:24.04
 RUN apt-get update -yq && apt-get install -yq time strace
-COPY --from=buildstage /usr/app /usr/app
-ENTRYPOINT ["/bin/bash", "/usr/app/entrypoint.sh"]
+COPY --from=buildstage /usr/app/checkpoint1 /usr/app/checkpoint1
+ENTRYPOINT ["/bin/bash", "/usr/app/checkpoint1/entrypoint.sh"]

@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
-#define ITERATIONS 100000000 // 100 million iterations
+#define ITERATIONS 10000000 // 10 million iterations
 
 /**
  * Function: main

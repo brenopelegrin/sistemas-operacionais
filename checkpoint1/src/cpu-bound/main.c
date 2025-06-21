@@ -1,7 +1,7 @@
 // This code doesn't use libraries to keep it strictly CPU-bound
 
 // Maximum number to verify in the sieve algorithm
-#define LIMIT 100000000  
+#define LIMIT 10000000
 
 // Array that stores if a number is prime (up to LIMIT numbers)
 // Using static allocation to ensure this code is strictly CPU-bound

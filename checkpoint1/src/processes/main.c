@@ -28,7 +28,7 @@ int main() {
         // Child's work
         printf("  Filho está trabalhando...\n");
         sleep(1);
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 100000; i++) {
             volatile int temp = i * i;
         }
         exit(0);

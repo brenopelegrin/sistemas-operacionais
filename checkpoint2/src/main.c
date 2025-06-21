@@ -6,8 +6,8 @@
 #include "lib-queuelkdlist/queuelkdlist.h"
 
 #define BUFFER_SIZE 10
-#define PRODUCER_WAIT_TIME_US 300000 // 300 milisegundos
-#define CONSUMER_WAIT_TIME_US 150000 // 150 milisegundos
+#define PRODUCER_WAIT_TIME_US 200000 // 20 milisegundos
+#define CONSUMER_WAIT_TIME_US 100000 // 10 milisegundos
 
 int* buffer[BUFFER_SIZE];
 int flag;

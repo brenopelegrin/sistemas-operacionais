@@ -1,0 +1,58 @@
+services:
+  checkpoint1:
+     build: 
+       context: ../../checkpoint1/
+  checkpoint2:
+     build: 
+       context: ../../checkpoint2/
+  checkpoint3:
+     build:
+       context: ../../checkpoint3/
+  api:
+    build: ./api
+    env_file:
+      - ./api.env
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - pytasks-network
+    environment:
+      - JWT_PRIVATE_PEM
+      - JWT_PUBLIC_PEM
+  handler:
+    deploy:
+      mode: replicated
+      replicas: 2
+    build: 
+      context: ./handler
+      target: build_worker
+      additional_contexts:
+          build_checkpoint1: "service:checkpoint1"
+          build_checkpoint2: "service:checkpoint2"
+          build_checkpoint3: "service:checkpoint3"
+    env_file:
+      - ./handler.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    networks:
+      - pytasks-network
+  rabbitmq:
+    image: rabbitmq:3.11-management
+    networks:
+      - pytasks-network
+  postgres:
+    image: postgres
+    environment:
+      - POSTRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST_AUTH_METHOD=password
+      - POSTGRES_DB=pytasks
+    networks:
+      - pytasks-network
+networks:
+  pytasks-network:
+    driver: bridge
