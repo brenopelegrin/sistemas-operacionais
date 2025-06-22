@@ -1,51 +1,75 @@
+# Define os serviços que compõem a aplicação
 services:
+  # Serviço de checkpoint 1: Usado como estágio de build para o handler.
+  # O contexto de build aponta para um diretório externo que contém os binários/dependências.
   checkpoint1:
      build: 
        context: ../../checkpoint1/
+  # Serviço de checkpoint 2: Similar ao checkpoint1, para outras dependências.
   checkpoint2:
      build: 
        context: ../../checkpoint2/
+  # Serviço de checkpoint 3: Similar aos anteriores.
   checkpoint3:
      build:
        context: ../../checkpoint3/
+  # Serviço da API: Recebe requisições e as envia para a fila AMQP.
   api:
+    # Constrói a imagem a partir do Dockerfile na pasta 'api'
     build: ./api
+    # Carrega variáveis de ambiente do arquivo api.env
     env_file:
       - ./api.env
+    # Mapeia a porta 8080 do contêiner para a porta 8080 do host
     ports:
       - "8080:8080"
+    # Garante que rabbitmq e postgres iniciem antes da api
     depends_on:
       - rabbitmq
       - postgres
+    # Conecta a um rede Docker definida abaixo
     networks:
       - pytasks-network
+    # Variáveis de ambiente para as chaves JWT (exportadas no host)
     environment:
       - JWT_PRIVATE_PEM
       - JWT_PUBLIC_PEM
+
+  # Serviço Handler: Processa as tarefas da fila AMQP.
   handler:
+    # Configurações de deploy para escalabilidade
     deploy:
       mode: replicated
       replicas: 2
     build: 
+      # Constrói a imagem a partir do Dockerfile na pasta 'handler'
       context: ./handler
+      # Especifica um estágio de build específico dentro do Dockerfile do handler
       target: build_worker
+      # Contextos de build adicionais, permitindo copiar arquivos de outros serviços (checkpoints)
       additional_contexts:
           build_checkpoint1: "service:checkpoint1"
           build_checkpoint2: "service:checkpoint2"
           build_checkpoint3: "service:checkpoint3"
+    # Carrega variáveis de ambiente do arquivo handler.env
     env_file:
       - ./handler.env
+    # Garante que rabbitmq e postgres iniciem antes do handler
     depends_on:
       - rabbitmq
       - postgres
+    # Conecta à mesma rede Docker da api
     networks:
       - pytasks-network
+  # Serviço RabbitMQ: Broker de mensagens AMQP para a comunicação entre api e handler.
   rabbitmq:
     image: rabbitmq:3.11-management
     networks:
       - pytasks-network
+  # Serviço PostgreSQL: Banco de dados para armazenar resultados das tarefas.
   postgres:
     image: postgres
+    # Variáveis de ambiente para configuração do banco de dados
     environment:
       - POSTRES_USER=postgres
       - POSTGRES_PASSWORD=password
@@ -53,6 +77,8 @@ services:
       - POSTGRES_DB=pytasks
     networks:
       - pytasks-network
+# Definição da rede Docker para comunicação entre os serviços
 networks:
   pytasks-network:
+    # Usa o driver de rede bridge padrão
     driver: bridge
