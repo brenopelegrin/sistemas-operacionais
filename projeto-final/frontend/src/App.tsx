@@ -21,6 +21,9 @@ import Checkpoint2ResultsPage from './routes/Models/Checkpoint2/Results'
 import Checkpoint3Page from './routes/Models/Checkpoint3'
 import Checkpoint3ResultsPage from './routes/Models/Checkpoint3/Results'
 
+import LoginPage from './routes/Login'
+import SignUpPage from './routes/SignUp'
+
 function App() {
   return (
     <ChakraProvider>
@@ -37,7 +40,9 @@ function App() {
           <Route path='/models/checkpoint2/results' element={<Checkpoint2ResultsPage />} />
           <Route path='/models/checkpoint3' element={<Checkpoint3Page />} />
           <Route path='/models/checkpoint3/results' element={<Checkpoint3ResultsPage />} />
-          <Route path='/static/movimento3D.html' element={<Link to="/static/movimento3D.html"/>}/>
+
+          <Route path='/login' element={<LoginPage/>}/>
+          <Route path='/signup' element={<SignUpPage/>}/>
         </Routes>
         </Box>
       </Router> 

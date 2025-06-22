@@ -74,8 +74,8 @@ const MenuLinks = ({ isOpen }:any) => {
         direction={["row", "row", "row", "row"]}
         pt={[4, 4, 0, 0]}
       >
-        <MenuItem to="/">Home</MenuItem>
-        <MenuItem to="/models">Models</MenuItem>
+        <MenuItem to="/">Início</MenuItem>
+        <MenuItem to="/models">Simulações</MenuItem>
         <Button onClick={toggleColorMode}>
             {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
         </Button>

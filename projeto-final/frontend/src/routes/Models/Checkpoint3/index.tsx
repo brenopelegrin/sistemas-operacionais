@@ -108,7 +108,7 @@ export default function Checkpoint3Page() {
             const id = data["data"]["id"];
             setButtonText(
                 <Box>
-                    <Text>Executing task on the server.</Text>
+                    <Text>Executando tarefa no servidor.</Text>
                     <Text>Task ID: {String(id)}</Text>
                 </Box>
             );
@@ -164,14 +164,8 @@ export default function Checkpoint3Page() {
   
   const handleButtonClick = () => {
     setControlsVisible(false);
-    setButtonText(<Text>Sending request to API.</Text>);
-    const dt = 0.001;
-    const r0 = [rxValue, ryValue, rzValue];
-    const v0 = [vxValue, vyValue, vzValue];
-    const mass = mValue;
-    const radius = rValue;
-    const drag = dragBool;
-    mutatePost({x: 1, y: 1});
+    setButtonText(<Text>Enviando pedido para a API.</Text>);
+    mutatePost({x: 1.5, y: 1.5});
   }
 
   const setPosByRadius = (val: number) => {
@@ -190,55 +184,13 @@ export default function Checkpoint3Page() {
 
   return (
     <Center>
-      {controlsVisible ?     <CardWithButton header="Controls" minWidth="1vw" customButton={myButton}>
-      <List spacing={2}>
-                <ListItem>
-                    <List spacing={-2}>
-                        <ListItem>
-                            Mass (kg)
-                        </ListItem>
-                        <ListItem>
-                            <SliderCustom onChangeUseState={setMValue} id="mass_slider" default={m} min={0.01} max={1.00} step={0.01} marks={true}/>
-                        </ListItem>
-                    </List>
-                </ListItem>
-                <ListItem pt={3}>
-                    <List spacing={-2}>
-                        <ListItem>
-                            Radius (m)
-                        </ListItem>
-                        <ListItem>
-                            <SliderCustom onChangeUseState={setPosByRadius} id="radius_slider" default={r} min={0.1} max={1.00} step={0.01} marks={true}/>
-                        </ListItem>
-                    </List>
-                </ListItem>
-                <ListItem pt={3}>
-                    <Text pb={2}>
-                        Initial velocity (m/s)
-                    </Text>
-                    <Flex direction="row" gap={4}>
-                      <InputIncrement value={vxValue} onChangeUseState={(value: string) => setVxValue(parseFloat(value))} default={vx} size="sm" name="x" min={0} max={1000} step={0.1} />
-                      <InputIncrement value={vyValue} onChangeUseState={(value: string) => setVyValue(parseFloat(value))} default={vy} size="sm" name="y" min={0} max={1000} step={0.1} />
-                      <InputIncrement value={vzValue} onChangeUseState={(value: string) => setVzValue(parseFloat(value))} default={vz} size="sm" name="z" min={0} max={1000} step={0.1} />    
-                    </Flex>
-                </ListItem>
-                <ListItem pt={2}>
-                    <Text pb={2}>
-                        Initial position of the center of sphere (m)
-                    </Text>
-                    <Flex direction="row" gap={4}>
-                      <InputIncrement value={rxValue} onChangeUseState={(value: string) => setRxValue(parseFloat(value))} default={rx} size="sm" name="x" min={rValue} max={1000} step={0.1} />
-                      <InputIncrement value={ryValue} onChangeUseState={(value: string) => setRyValue(parseFloat(value))} default={ry} size="sm" name="y" min={rValue} max={1000} step={0.1} />
-                      <InputIncrement value={rzValue} onChangeUseState={(value: string) => setRzValue(parseFloat(value))} default={rz} size="sm" name="z" min={rValue} max={1000} step={0.1} />
-                    </Flex>
-                </ListItem>
-                <ListItem pt={1}>
-                    <Checkbox isChecked={dragBool} onChange={(e) => handleDragCheck(e)}>Assume air resistance</Checkbox>
-                </ListItem>
-                </List>
+      {controlsVisible ?     <CardWithButton header="Controles - checkpoint3" minWidth="1vw" customButton={myButton}>
+    <Box marginTop="1vh" bg={useColorModeValue('gray.100', 'gray.700')} borderRadius="20px">
+        <Text paddingX="2vw" paddingY="2vh" fontSize="lg">{"Infelizmente os controles e configurações para essa simulação ainda não foram adicionados :("}</Text>
+    </Box>
       </CardWithButton> : <BoxInfo 
                 icon={<Spinner boxSize={5}/>}
-                title="Waiting the server..."
+                title="Esperando o servidor..."
                 boxText={buttonText}
             />}
     </Center>

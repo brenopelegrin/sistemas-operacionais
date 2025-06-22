@@ -92,8 +92,8 @@ export default function Card(props: CardProps) {
     
                 {props.url_api ? (
                 <Link href={props.url_api} isExternal>
-                    <HStack alignContent="center"><Icon as={BiBook} boxSize={4}/> <Text>Docs/API</Text></HStack>
-                </Link>) : <HStack alignContent="center"><Icon as={BiBook} boxSize={4}/> <Text>Docs/API</Text></HStack>}
+                    <HStack alignContent="center"><Icon as={BiBook} boxSize={4}/> <Text>Docs</Text></HStack>
+                </Link>) : <HStack alignContent="center"><Icon as={BiBook} boxSize={4}/> <Text>Docs</Text></HStack>}
             </Button>
             <Button
                 flex={1}
@@ -113,8 +113,8 @@ export default function Card(props: CardProps) {
                 }}>
                 {props.url_gui ? (
                 <RouteLink to={props.url_gui}>
-                    <HStack alignContent="center"><ExternalLinkIcon boxSize={4}/> <Text>Access</Text></HStack>
-                </RouteLink>) : <HStack alignContent="center"><ExternalLinkIcon boxSize={4}/> <Text>Access</Text></HStack>}
+                    <HStack alignContent="center"><ExternalLinkIcon boxSize={4}/> <Text>Acessar</Text></HStack>
+                </RouteLink>) : <HStack alignContent="center"><ExternalLinkIcon boxSize={4}/> <Text>Acessar</Text></HStack>}
 
             </Button>
             </Stack>

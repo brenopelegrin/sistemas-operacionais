@@ -1,6 +1,6 @@
 
 export function setTaskData(data: any){
-    localStorage.setItem("taskData", JSON.stringify(data));
+    localStorage.setItem("taskData_checkpoint2", JSON.stringify(data));
 }
 
 import PlotlyPlot from 'react-plotly.js';
@@ -44,9 +44,9 @@ export default function Checkpoint1ResultsPage(){
     const [localData, setLocalData] = useState(null);
   
     useEffect(() => {
-      if (localStorage.getItem("taskData") !== null) {
+      if (localStorage.getItem("taskData_checkpoint2") !== null) {
         setInvalidData(false);
-        setLocalData(JSON.parse(String(localStorage.getItem("taskData"))));
+        setLocalData(JSON.parse(String(localStorage.getItem("taskData_checkpoint2"))));
       } else {
         console.log("invalid data")
         setInvalidData(true);
@@ -75,7 +75,7 @@ export default function Checkpoint1ResultsPage(){
         e.preventDefault()
         downloadFile({
           data: JSON.stringify(result),
-          fileName: 'simulation.json',
+          fileName: 'simulation_checkpoint2.json',
           fileType: 'text/json',
         })
       }
@@ -88,10 +88,10 @@ export default function Checkpoint1ResultsPage(){
         return(
         <Center>
             <BoxInfo 
-                title="Analyzing data..."
+                title="Analisando dados..."
                 bgColor={useColorModeValue('blue.100', 'blue.800')}
                 icon={<WarningIcon/>}
-                boxText={<Text>If the local stored data is invalid, you will be redirected to the simulation page.</Text>}/>
+                boxText={<Text>Se os dados armazenados localmente forem inválidos, você será redirecionado para a página de simulação.</Text>}/>
         </Center>
         )
     } else{
@@ -99,27 +99,26 @@ export default function Checkpoint1ResultsPage(){
         const result_stdout = localData['result'][0];
         const result_stderr = localData['result'][1];
         const id = localData['id'];
-        const text="Lorem ipsum dolor at simet";
         return(
         <Stack justify='center' align='center' spacing={4}>
             <Stack spacing={4} direction="row" justify='center' align='center'>
                 <BoxInfo 
                     icon={<CheckIcon boxSize={5}/>}
-                    title="Simulation performed successfully!"
+                    title="Simulação concluída com sucesso!"
                     boxText={<Text>Task ID: {id}</Text>}
                     bgColor={useColorModeValue("green.100", "green.700")}
                 />
                 <Stack spacing={4} direction="column" justify='center' align='center'>
                     <Button onClick={(e) => exportToJson(e, result)}>
-                        Download JSON
+                        Baixar JSON
                     </Button>
                     <Button onClick={handleClickNewSim}>
-                        Simulate again
+                        Simular denovo
                     </Button>
                 </Stack>
             </Stack>
             <BoxInfo 
-                title="Program standard output (stdout)"
+                title="Standard output (stdout)"
                 bgColor={useColorModeValue('gray.100', 'gray.700')}
                 icon={<WarningIcon/>}
                 maxWidth='90vw'
@@ -130,7 +129,7 @@ export default function Checkpoint1ResultsPage(){
                 }
             />
             <BoxInfo 
-                title="Program standard error (stderr)"
+                title="Standard error (stderr)"
                 bgColor={useColorModeValue('red.100', 'red.700')}
                 icon={<WarningIcon/>}
                 maxWidth='90vw'

@@ -44,7 +44,7 @@ export default function HomePage() {
                     bg: 'blue.500',
                 }}>
                     <RouteLink to="/models">
-                        View simulations
+                        Ver simulações
                     </RouteLink>
                 </Button>
             </Center>
@@ -52,7 +52,7 @@ export default function HomePage() {
             <Center>
                 <Button variant={'link'} colorScheme={'blue'} size={'sm'}>
                     <Link href={'https://github.com/ICMC-SSC0541-2025/projeto-ssc0541-grupo-06/'} isExternal>
-                        <HStack><Icon as={FaGithub} boxSize={5}/><Text>View the source code on GitHub</Text></HStack>
+                        <HStack><Icon as={FaGithub} boxSize={5}/><Text>Ver codigo-fonte no GitHub</Text></HStack>
                     </Link>
                 </Button>
             </Center>

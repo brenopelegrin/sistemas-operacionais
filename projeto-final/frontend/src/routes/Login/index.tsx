@@ -1,37 +1,36 @@
 import {
-    Flex,
-    Box,
-    FormControl,
-    FormLabel,
-    Input,
-    Checkbox,
-    Stack,
-    Link,
-    Button,
-    Heading,
-    Text,
-    useColorModeValue,
-    Alert,
-    AlertIcon,
-    AlertTitle,
-    AlertDescription,
-  } from '@chakra-ui/react';
+  Flex,
+  Box,
+  FormControl,
+  FormLabel,
+  Input,
+  Checkbox,
+  Stack,
+  Link,
+  Button,
+  Heading,
+  Text,
+  useColorModeValue,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+} from '@chakra-ui/react';
 
 import DummyBox from '../../components/DummyBox';
 
-import { useState, useContext } from 'react';
+import { useState, useContext, ReactNode, FormEvent, ChangeEvent } from 'react';
 import { Link as RouteLink } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
   
-export default function LoginPage(nextpage) {
+export default function LoginPage({ nextpage }: any) {
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [infoBox, setInfoBox] = useState(<></>);
+  const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [infoBox, setInfoBox] = useState<ReactNode>(<></>);
 
   const { signed, Login } = useAuth();
-  async function handleLogin({email, password}) {
+  async function handleLogin({ email, password }: any) {
     setInfoBox(infoBoxComponent({status:'info', message:'Aguardando o servidor...'}))
     const {status, message} = await Login({
       email: email,
@@ -40,11 +39,11 @@ export default function LoginPage(nextpage) {
     return({status, message})
   }
 
-  const handleSubmit = event => {
+  const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
   };
 
-  const infoBoxComponent = ({status, message}) => {
+  const infoBoxComponent = ({ status, message }: any) => {
     return(
       <Alert status={status} borderRadius={15}>
         <AlertIcon />
@@ -57,14 +56,13 @@ export default function LoginPage(nextpage) {
     <Flex
       minH={'80vh'}
       align={'center'}
-      justify={'center'}
-      bg={useColorModeValue('gray.50', 'gray.800')}>
+      justify={'center'}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6}>
         <DummyBox>
         <Stack align={'center'}>
           <Heading fontSize={'3xl'}>Entre na sua conta</Heading>
           <Text fontSize={'md '}>
-            Ainda não tem uma? <Link color={useColorModeValue('yellow.600', 'yellow.400')}><RouteLink to="/signup">Clique aqui para criar</RouteLink></Link> ✌️
+            Ainda não tem uma? <Link color={useColorModeValue('blue.600', 'blue.400')}><RouteLink to="/signup">Clique aqui para criar</RouteLink></Link> ✌️
           </Text>
         </Stack>  
         </DummyBox>
@@ -77,33 +75,31 @@ export default function LoginPage(nextpage) {
           <Stack spacing={4}>
           {infoBox}
             <FormControl isRequired id="email">
-              <FormLabel>Email USP</FormLabel>
+              <FormLabel>Email</FormLabel>
               <Input 
-                focusBorderColor='yellow.400'
+                focusBorderColor='blue.400'
                 background={useColorModeValue('gray.100', 'blackAlpha.300')}
-                placeholer='Digite seu email'
+                placeholder='Digite seu email'
                 type="email"
-                onChange={event => setEmail(event.currentTarget.value)} />
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setEmail(event.currentTarget.value)} />
             </FormControl>
             <FormControl isRequired id="password">
-              <FormLabel>Senha do spotted</FormLabel>
+              <FormLabel>Senha</FormLabel>
               <Input
-                focusBorderColor='yellow.400'
+                focusBorderColor='blue.400'
                 placeholder='Digite sua senha'
                 background={useColorModeValue('gray.100', 'blackAlpha.300')}
                 type="password"
-                onChange={event => setPassword(event.currentTarget.value)}/>
+                onChange={(event: ChangeEvent<HTMLInputElement>) => setPassword(event.currentTarget.value)}/>
             </FormControl>
             <Stack spacing={10}>
               <Stack
                 direction={{ base: 'column', sm: 'row' }}
                 align={'start'}
                 justify={'space-between'}>
-                <Checkbox colorScheme='yellow'>Lembrar</Checkbox>
-                <Link color={useColorModeValue('yellow.600','yellow.400')}>Esqueci minha senha</Link>
               </Stack>
               <Button
-                bg={'yellow.500'}
+                bg={'blue.500'}
                 color={'white'}
                 type="submit"
                 onClick={async () => {
@@ -111,7 +107,7 @@ export default function LoginPage(nextpage) {
                   setInfoBox(infoBoxComponent({status, message}))
                 }}
                 _hover={{
-                  bg: 'yellow.600',
+                  bg: 'blue.600',
                 }}>
                 Entrar
               </Button>
