@@ -1,77 +1,111 @@
+# Define os serviços que compõem a aplicação
 services:
-  backend:
-    restart: on-failure
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+  # Serviço de checkpoint 1: Usado como estágio de build para o handler.
+  # O contexto de build aponta para um diretório externo que contém os binários/dependências.
+  checkpoint1:
+     build: 
+       context: ../checkpoint1/
+  # Serviço de checkpoint 2: Similar ao checkpoint1, para outras dependências.
+  checkpoint2:
+     build: 
+       context: ../checkpoint2/
+  # Serviço de checkpoint 3: Similar aos anteriores.
+  checkpoint3:
+     build:
+       context: ../checkpoint3/
+  # Serviço da API: Recebe requisições e as envia para a fila AMQP.
+  api:
+    # Constrói a imagem a partir do Dockerfile na pasta 'api'
+    build: ./backend/api
+    # Carrega variáveis de ambiente do arquivo api.env
+    env_file:
+      - ./backend/api.env
+    # Mapeia a porta 8080 do contêiner para a porta 8080 do host
+    expose:
+      - "8080"
+    ports:
+      - "8080:8080"
+    # Garante que rabbitmq e postgres iniciem antes da api
     depends_on:
-      postgres:
-        condition: service_healthy
-      #rabbitmq:
-        #condition: service_healthy
+      - rabbitmq
+      - postgres
+    # Conecta a um rede Docker definida abaixo
+    networks:
+      - pytasks-network
+    # Variáveis de ambiente para as chaves JWT (exportadas no host)
+    environment:
+      - JWT_PRIVATE_PEM
+      - JWT_PUBLIC_PEM
 
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+    ports:
+      - "5051:3000"
+    links:
+      - "api:api-docker-host"
+    env_file:
+      - ./frontend/frontend.env
     depends_on:
-      backend:
+      api:
+        condition: service_started
+      postgres:
         condition: service_started
 
-  postgres:
-    image: postgres
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      # set default database
-      POSTGRES_DB: postgres
-    # set volume for persistent data
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d postgres"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-    
+  # Serviço Handler: Processa as tarefas da fila AMQP.
+  handler:
+    # Configurações de deploy para escalabilidade
+    deploy:
+      mode: replicated
+      replicas: 2
+    build: 
+      # Constrói a imagem a partir do Dockerfile na pasta 'handler'
+      context: ./backend/handler
+      # Especifica um estágio de build específico dentro do Dockerfile do handler
+      target: build_worker
+      # Contextos de build adicionais, permitindo copiar arquivos de outros serviços (checkpoints)
+      additional_contexts:
+          build_checkpoint1: "service:checkpoint1"
+          build_checkpoint2: "service:checkpoint2"
+          build_checkpoint3: "service:checkpoint3"
+    # Carrega variáveis de ambiente do arquivo handler.env
+    env_file:
+      - ./backend/handler.env
+    # Garante que rabbitmq e postgres iniciem antes do handler
+    depends_on:
+      - rabbitmq
+      - postgres
+    # Conecta à mesma rede Docker da api
+    networks:
+      - pytasks-network
+  # Serviço RabbitMQ: Broker de mensagens AMQP para a comunicação entre api e handler.
   rabbitmq:
-    image: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    # set volume for persistent data
-    volumes:
-      - rabbitmqdata:/var/lib/rabbitmq
+    image: rabbitmq:3.11-management
+    networks:
+      - pytasks-network
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
       timeout: 10s
       retries: 5
-    
-  # redis for caching
-  redis:
-    image: redis
-    ports:
-      - "6379:6379"
-    # set volume for persistent data
-    volumes:
-      - redisdata:/var/lib/redis
-
-# define volumes
-volumes:
-  pgdata:
-    driver: local
-  rabbitmqdata:
-    driver: local
-  redisdata:
-    driver: local
-
-# setup network as host by default
+  # Serviço PostgreSQL: Banco de dados para armazenar resultados das tarefas.
+  postgres:
+    image: postgres
+    # Variáveis de ambiente para configuração do banco de dados
+    environment:
+      - POSTRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_HOST_AUTH_METHOD=password
+      - POSTGRES_DB=pytasks
+    networks:
+      - pytasks-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+# Definição da rede Docker para comunicação entre os serviços
 networks:
-  default:
+  pytasks-network:
+    # Usa o driver de rede bridge padrão
     driver: bridge

@@ -10,7 +10,8 @@ interface TaskGetArgs {
   id: string
 }
 
-const baseURL = 'http://localhost:8080';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const baseURL = BACKEND_URL ? BACKEND_URL : 'http://localhost:8080';
 
 // Define a mutation function to make the POST request
 export async function  make_checkpoint1_post({x, y}: TestArgs){
