@@ -1,13 +1,44 @@
-# physicsjs (now **physicsonweb**)
+# Frontend
 
-The "physics on web" project aims to make simulations of various physical phenomena available on the internet. You can explore physical models thorugh a graphical interface to understand the concepts involved in that phenomenon, and can obtain raw data thorugh the API.
+Este projeto é uma aplicação React que permite aos usuários interagir com diferentes "checkpoints" (1, 2 e 3).
 
-## Getting Started
+## Visão Geral
 
-The project consists of a React frontend that allows the user to control variables, tune the simulations and visualize the simulations results in graphs or other media. The frontend makes requests to an API based on [flask-tasks-docker](https://github.com/brenopelegrin/flask-tasks-docker), that registers a task in a queue and proccess them.
+A aplicação apresenta uma interface com cards para cada checkpoint.
 
-### Front-end
-The documentation for the frontend is still not available, but will be added soon.
+## Arquitetura
 
-### Back-end
-The documentation for backend can be found [here](https://github.com/brenopelegrin/physicsjs/blob/master/backend/README.md).
+A arquitetura do projeto é baseada em componentes React. Os principais componentes são:
+
+*   `src/routes/Models/index.tsx`: Este componente renderiza a página principal com os cards para cada checkpoint.
+*   `src/components/TaskFetch/index.tsx`: Este componente contém funções para realizar requisições POST para a API de backend, utilizando a biblioteca `axios`. As requisições são feitas para o endpoint `/task` com um payload contendo o tipo da tarefa (`soicmc.main.run_checkpoint1`, `soicmc.main.run_checkpoint2`, `soicmc.main.run_checkpoint3`) e argumentos específicos.
+
+## Como Executar
+
+1.  Certifique-se de ter o Node.js e o yarn instalados.
+2.  Execute `yarn install` para instalar as dependências.
+3.  Execute `yarn dev` para iniciar o servidor de desenvolvimento com Vite.
+4.  Acesse a aplicação no seu navegador através do endereço `http://localhost:5173`.
+
+Este projeto utiliza as seguintes tecnologias:
+
+*   React
+*   Vite
+*   Yarn
+
+## Endpoints da API
+
+As seguintes requisições POST são feitas para a API de backend:
+
+*   `soicmc.main.run_checkpoint1`: Executa a tarefa relacionada ao checkpoint 1.
+*   `soicmc.main.run_checkpoint2`: Executa a tarefa relacionada ao checkpoint 2.
+*   `soicmc.main.run_checkpoint3`: Executa a tarefa relacionada ao checkpoint 3.
+
+Um endpoint GET também está disponível:
+
+*   `/task/{id}`: Busca informações sobre uma tarefa específica, utilizando o ID da tarefa.
+
+## Observações
+
+*   Os checkpoints 2 e 3 podem não ter funcionalidades implementadas no momento.
+*   A API de backend deve estar em execução no endereço `http://localhost:8080` para que as requisições funcionem corretamente.

@@ -1,4 +1,3 @@
-import Testando from './components/FetchAPI'
 import NavBar from './components/Header'
 import * as React from 'react'
 
