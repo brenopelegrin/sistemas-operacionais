@@ -81,6 +81,7 @@ export default function Checkpoint3ResultsPage(){
       }
 
       function handleClickNewSim() {
+        localStorage.setItem("taskData_checkpoint3", "");
         navigate("/models/checkpoint3");
       }
 

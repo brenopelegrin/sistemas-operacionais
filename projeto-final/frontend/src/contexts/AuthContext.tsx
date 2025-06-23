@@ -20,8 +20,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         api.defaults.headers.Authorization = `Bearer ${token}`;
         let response: any = {};
         try {
-            response = await api.get('/protected/health');
-            if (response.data.authenticated) {
+            console.log("trying to verify token on /protect, token=", token)
+            response = await api.get('/protected');
+            if (response.status == 200) {
                 setSigned(true);
             } else {
                 setSigned(false);
@@ -40,7 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   async function Login(userData: any): Promise<any> {
     let response: any = {};
     try {
-        response = await api.post('/auth/login', userData);
+        console.log("trying to send payload", userData);
+        response = await api.post('/token', userData);
     } catch(err: any) {
         console.log(err);
         if (err.response?.status === 400 || err.response?.status === 401){
@@ -58,7 +60,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     api.defaults.headers.Authorization = `Bearer ${response.data.token}`;
 
     sessionStorage.setItem('@App:token', response.data.token);
-    sessionStorage.setItem('@App:user', response.data.user); // Assuming user data might also be returned
+    console.log("sucesso no login, token:", response.data.token)
     return {status: 'success', message: "Logado com sucesso!"};
   }
 
@@ -69,7 +71,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.log(err);
     }
     sessionStorage.removeItem('@App:token');
-    sessionStorage.removeItem('@App:user');
     setSigned(false);
   }
 

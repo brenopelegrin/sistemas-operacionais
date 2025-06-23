@@ -1,52 +1,55 @@
 import axios, { AxiosResponse } from 'axios';
 
-const apiUrl: string = 'https://spottedcaaso-api.onrender.com';
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const baseURL = BACKEND_URL ? BACKEND_URL : 'http://localhost:8080';
+
+const apiUrl: string = baseURL;
 
 const api = axios.create({
-    baseURL: apiUrl + '/api/v1'
+    baseURL: apiUrl,
 });
 
-async function getFeed(): Promise<AxiosResponse<any>> {
-    const response = await api.get('/protected/feed');
-    return response;
+async function registerUser({ email, password }: any): Promise<void> {
+    await api.post('/auth/register', { user: email, password: password });
 }
 
-async function postSpotted({ text }: any): Promise<AxiosResponse<any>> {
-    const response = await api.post('/protected/spotted', { text });
-    return response;
-}
+async function  make_checkpoint1_post({x, y}: any){
+  const response = await api.post('/task', {
+    "type": "soicmc.main.run_checkpoint1",
+    "args": {
+        "x": 1,
+        "y": 2,
+      }
+  });
+  return response;
+};
 
-async function postAnonymousSpotted({ text }: any): Promise<AxiosResponse<any>> {
-    const response = await api.post('/unprotected/spotted', { text });
-    return response;
-}
+async function  make_checkpoint2_post({x, y}: any){
+  const response = await api.post('/task', {
+    "type": "soicmc.main.run_checkpoint2",
+    "args": {
+        "x": 1,
+        "y": 2,
+      }
+  });
+  return response;
+};
 
-async function postProtectedSpottedComment({ spottedId, text }: any): Promise<AxiosResponse<any>> {
-    const response = await api.post('/protected/spotted/' + String(spottedId) + '/comment', { text });
-    return response;
-}
-
-async function postProtectedSpottedVote({ spottedId }: any): Promise<AxiosResponse<any>> {
-    const response = await api.post('/protected/spotted/' + String(spottedId) + '/vote');
-    return response;
-}
-
-async function postProtectedSpottedReport({ spottedId, text }: any): Promise<AxiosResponse<any>> {
-    const response = await api.post('/protected/spotted/' + String(spottedId) + '/report', { text });
-    return response;
-}
-
-async function registerUser({ email, name, username, password }: any): Promise<void> {
-    await api.post('/auth/register', { email, name, username, password, password_confirmation: password });
-}
+async function  make_checkpoint3_post({x, y}: any){
+  const response = await api.post('/task', {
+    "type": "soicmc.main.run_checkpoint3",
+    "args": {
+        "x": 1.05,
+        "y": 2.03,
+      }
+  });
+  return response;
+};
 
 export {
   api,
-  getFeed,
-  postAnonymousSpotted,
-  postProtectedSpottedComment,
-  postProtectedSpottedReport,
-  postProtectedSpottedVote,
-  postSpotted,
   registerUser,
+  make_checkpoint1_post,
+  make_checkpoint2_post,
+  make_checkpoint3_post,
 };

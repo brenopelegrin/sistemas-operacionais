@@ -29,11 +29,11 @@ export default function LoginPage({ nextpage }: any) {
   const [password, setPassword] = useState<string>('');
   const [infoBox, setInfoBox] = useState<ReactNode>(<></>);
 
-  const { signed, Login } = useAuth();
+  const { signed, Login, Logout } = useAuth();
   async function handleLogin({ email, password }: any) {
     setInfoBox(infoBoxComponent({status:'info', message:'Aguardando o servidor...'}))
     const {status, message} = await Login({
-      email: email,
+      user: email,
       password: password,
     });
     return({status, message})

@@ -141,7 +141,7 @@ class ProtectedByJwt(Resource):
         return decoded_payload
 
 class GenerateTokenForUser(Resource):
-    def get(self):
+    def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('user', required=True, type=str, help='You need to inform user', location='json')
         parser.add_argument('password', required=True, type=str, help='You need to inform password', location='json')

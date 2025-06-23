@@ -81,6 +81,7 @@ export default function Checkpoint1ResultsPage(){
       }
 
       function handleClickNewSim() {
+        localStorage.setItem("taskData_checkpoint2", "");
         navigate("/models/checkpoint2");
       }
 
