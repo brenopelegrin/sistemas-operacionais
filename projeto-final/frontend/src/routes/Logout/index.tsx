@@ -17,8 +17,6 @@ import {
     AlertDescription,
   } from '@chakra-ui/react';
 
-import { CheckCircleIcon } from '@chakra-ui/icons';
-
 import { Link as RouteLink, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../contexts/AuthContext';
@@ -30,7 +28,7 @@ export default function LogoutPage() {
   const navigate = useNavigate();
   const [infoBox, setInfoBox] = useState(<></>);
 
-  const infoBoxComponent = ({status, message}) => {
+  const infoBoxComponent = ({status, message}: any) => {
     return(
       <Alert status={status}>
         <AlertIcon />
@@ -43,22 +41,18 @@ export default function LogoutPage() {
     setInfoBox(infoBoxComponent({status: 'info', message: 'Aguardando o servidor...'}))
     await Logout();
     navigate('/');
-  }
-
-  
+  }  
 
   return (
     <Flex
       minH={'80vh'}
       align={'center'}
-      justify={'center'}
-      bg={useColorModeValue('gray.50', 'gray.800')}>
+      justify={'center'}>
       <Stack spacing={8} mx={'auto'} maxW={'lg'} py={12} px={6}>
         <Stack align={'center'}>
           {infoBox}
           <Heading fontSize={'4xl'} pb={4}>
             <Stack align={'center'} flexDirection='row' gap={4}>
-                <CheckCircleIcon/>
                 <Text>Fazer logout</Text>
             </Stack></Heading>
           <Text fontSize={'lg'}>
@@ -67,15 +61,15 @@ export default function LogoutPage() {
         </Stack> 
         
         <Button
-            bg={'yellow.500'}
+            bg={'blue.500'}
             color={'white'}
             onClick={handleLogout}
         >Sair</Button> 
         <Button
-            bg={'yellow.500'}
+            bg={'blue.500'}
             color={'white'}
             
-        ><RouteLink to="/feed">Voltar para o feed</RouteLink></Button> 
+        ><RouteLink to="/">Voltar para o início</RouteLink></Button> 
       </Stack>
     </Flex>
   );

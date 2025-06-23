@@ -25,60 +25,50 @@ import Checkpoint3ResultsPage from './routes/Models/Checkpoint3/Results'
 
 import LoginPage from './routes/Login'
 import SignUpPage from './routes/SignUp'
+import LogoutPage from './routes/Logout'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 function App() {
-  //const { signed, Login, Logout } = useAuth();
-  const signed = true;
-  if (signed) {
-    return (
-      <AuthProvider>
-      <ChakraProvider>
-        <Box height="100%">
-        <Router>
-          <NavBar/>
-          <Box marginTop="2em">
-            <Routes>
-              <Route path='/' element={<HomePage />} />
-              <Route path='/models' element={<ModelsPage />} />
-              <Route path='/models/checkpoint1' element={<Checkpoint1Page />} />
-              <Route path='/models/checkpoint1/results' element={<Checkpoint1ResultsPage />} />
-              <Route path='/models/checkpoint2' element={<Checkpoint2Page />} />
-              <Route path='/models/checkpoint2/results' element={<Checkpoint2ResultsPage />} />
-              <Route path='/models/checkpoint3' element={<Checkpoint3Page />} />
-              <Route path='/models/checkpoint3/results' element={<Checkpoint3ResultsPage />} />
+  const { signed, Login, Logout } = useAuth();
+  console.log("esta logado?: ", signed);
 
-              <Route path='/login' element={<Navigate to="/"/>}/>
-              <Route path='/signup' element={<Navigate to="/"/>}/> 
-            </Routes>
-          </Box>
-        </Router> 
-        </Box>
-      </ChakraProvider>
-      </AuthProvider>
-    )
-  } else {
-    return (
-      <AuthProvider>
-      <ChakraProvider>
+  return (
         <Box height="100%">
         <Router>
           <NavBar/>
           <Box marginTop="2em">
-            <Routes>
-              <Route path='/' element={<HomePage />} />
-              <Route path='/models/*' element={<Navigate to="/login"/>} />
-              <Route path='/login' element={<LoginPage/>}/>
-              <Route path='/signup' element={<SignUpPage/>}/>
-            </Routes>
+            {
+              signed ?
+                <Routes>
+                  <Route path='/' element={<HomePage />} />
+                  <Route path='/models' element={<ModelsPage />} />
+                  <Route path='/models/checkpoint1' element={<Checkpoint1Page />} />
+                  <Route path='/models/checkpoint1/results' element={<Checkpoint1ResultsPage />} />
+                  <Route path='/models/checkpoint2' element={<Checkpoint2Page />} />
+                  <Route path='/models/checkpoint2/results' element={<Checkpoint2ResultsPage />} />
+                  <Route path='/models/checkpoint3' element={<Checkpoint3Page />} />
+                  <Route path='/models/checkpoint3/results' element={<Checkpoint3ResultsPage />} />
+
+                  <Route path='/login' element={<Navigate to="/"/>}/>
+                  <Route path='/signup' element={<Navigate to="/"/>}/> 
+                  <Route path='/logout' element={<LogoutPage/>}/> 
+                </Routes>
+              :
+                <Routes>
+                  <Route path='/' element={<HomePage />} />
+                  <Route path='/models/*' element={<Navigate to="/"/>} />
+
+                  <Route path='/login' element={<LoginPage/>}/>
+                  <Route path='/signup' element={<LoginPage/>}/> 
+                  <Route path='/logout' element={<LoginPage/>}/> 
+                </Routes>
+            }
+
           </Box>
         </Router> 
         </Box>
-      </ChakraProvider>
-      </AuthProvider>
     )
   }
-}
 
 export default App

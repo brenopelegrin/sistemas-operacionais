@@ -121,7 +121,10 @@ def get_user_permissions(user:str, password:str):
     # You can implement here an algorithm to get a dictionary from database based on credentials.
     payload = {
         "allowed_tasks": {
-            "test.main.myProtectedTask": True
+            "test.main.myProtectedTask": True,
+            "soicmc.main.run_checkpoint1": True,
+            "soicmc.main.run_checkpoint2": True,
+            "soicmc.main.run_checkpoint3": True,
         }
     }
     return payload
@@ -143,7 +146,7 @@ def verify_credentials(user:str, password:str):
     """
 
     # You can implement here an algorithm to verify the credentials, e.g. verifying a bcrypt hash on database
-    if user == "testuser" and password == "testpass":
+    if user == "test@test.com" and password == "test":
         return True
     else:
         return False

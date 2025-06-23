@@ -23,9 +23,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log("trying to verify token on /protect, token=", token)
             response = await api.get('/protected');
             if (response.status == 200) {
+                console.log("token verified, user logged in!")
                 setSigned(true);
+                sessionStorage.setItem('@App:token', token);
             } else {
                 setSigned(false);
+                sessionStorage.removeItem('@App:token');
             }
         } catch (err: any) {
             console.log(err);

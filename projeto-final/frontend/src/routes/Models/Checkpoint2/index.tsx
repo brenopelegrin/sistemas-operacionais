@@ -38,7 +38,7 @@ import CardWithButton from '../../../components/CardWithButton'
 import InputIncrement from '../../../components/InputIncrement';
 import axios from 'axios';
 
-import { make_checkpoint2_post, makeGet } from '../../../components/TaskFetch';
+import { make_checkpoint2_post, make_get_task } from "../../../services/Api";
 
 import SliderCustom from '../../../components/Slider';
 
@@ -70,7 +70,7 @@ export default function Checkpoint2Page() {
   }
 
   const navigate = useNavigate();
-  const {mutate: mutateGet, data: dataGet, error: errorGet, isError: isErrorGet, isSuccess: isSuccessGet} = useMutation(makeGet, {
+  const {mutate: mutateGet, data: dataGet, error: errorGet, isError: isErrorGet, isSuccess: isSuccessGet} = useMutation(make_get_task, {
     onSuccess: async (data, variables) => {
         const id = data["data"]["id"];
         const status = data["data"]["status"];

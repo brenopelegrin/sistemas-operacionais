@@ -4,6 +4,8 @@ import { Link as RouteLink } from "react-router-dom";
 import Logo from "../Logo";
 import { MoonIcon, SunIcon } from '@chakra-ui/icons';
 
+import { AuthProvider, useAuth } from "../../contexts/AuthContext";
+
 const NavBar = (props:any) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -62,6 +64,7 @@ const MenuItem = ({ children, isLast, to = "/", ...rest }:any) => {
 
 const MenuLinks = ({ isOpen }:any) => {
   const { colorMode, toggleColorMode } = useColorMode();
+  const { signed, Login, Logout } = useAuth();
   return (
     <Box
       display={{ base: isOpen ? "block" : "none", md: "block" }}
@@ -76,6 +79,7 @@ const MenuLinks = ({ isOpen }:any) => {
       >
         <MenuItem to="/">Início</MenuItem>
         <MenuItem to="/models">Simulações</MenuItem>
+        {signed ? <MenuItem to="/logout">Logout</MenuItem> : <MenuItem to="/login">Login</MenuItem>}
         <Button onClick={toggleColorMode}>
             {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
         </Button>

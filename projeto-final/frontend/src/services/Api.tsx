@@ -46,10 +46,16 @@ async function  make_checkpoint3_post({x, y}: any){
   return response;
 };
 
+async function make_get_task({id}: any){
+  const response = await api.get('/task/'+id);
+  return response;
+};
+
 export {
   api,
   registerUser,
   make_checkpoint1_post,
   make_checkpoint2_post,
   make_checkpoint3_post,
+  make_get_task,
 };
