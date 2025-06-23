@@ -51,6 +51,8 @@ services:
         condition: service_started
       postgres:
         condition: service_started
+    networks:
+      - pytasks-network
 
   # Serviço Handler: Processa as tarefas da fila AMQP.
   handler:

@@ -4,9 +4,9 @@ COPY . /app
 WORKDIR /app
 
 # Instala dependencias
-RUN npm i -g --force yarn serve
+RUN npm i -g --force yarn
 RUN yarn install --frozen-lockfile
 RUN yarn build
 
 # Serve o site
-CMD [ "serve", "-s", "dist" ]
+CMD [ "yarn", "preview", "--port", "3000", "--host"]

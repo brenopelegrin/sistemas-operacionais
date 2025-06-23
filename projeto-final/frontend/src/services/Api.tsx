@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
-const baseURL = BACKEND_URL ? BACKEND_URL : 'http://localhost:8080';
+const baseURL = BACKEND_URL ? BACKEND_URL : '/api';
 
 const apiUrl: string = baseURL;
 
