@@ -4,7 +4,7 @@ Este projeto consiste em um backend escalável para execução de tarefas em wor
 
 ## Visão Geral do Projeto
 
-`pytasks` é um microsserviço completo e personalizável para executar tarefas computacionais em máquinas remotas e visualizar seus resultados através de uma API. O objetivo principal é tornar a computação em nuvem mais acessível, permitindo que os desenvolvedores se concentrem apenas no desenvolvimento das tarefas, e não no backend que as executa.
+É um microsserviço completo e personalizável para executar tarefas computacionais em máquinas remotas e visualizar seus resultados através de uma API. O objetivo principal é tornar a computação em nuvem mais acessível, permitindo que os desenvolvedores se concentrem apenas no desenvolvimento das tarefas, e não no backend que as executa.
 
 O projeto é baseado em tecnologias robustas como:
 - **API**: Construída com [Flask](https://github.com/pallets/flask) e servida com [Gunicorn](https://github.com/benoitc/gunicorn).
@@ -12,7 +12,7 @@ O projeto é baseado em tecnologias robustas como:
 
 ### Arquitetura
 
-A arquitetura do `pytasks` envolve dois componentes principais:
+A arquitetura do backend envolve dois componentes principais:
 
 1.  **API**: Expõe endpoints HTTP para que os usuários possam enviar requisições de tarefas para uma fila.
 2.  **Handler**: Escuta a fila de mensagens, executa as tarefas recebidas e armazena os resultados em um banco de dados.
@@ -59,7 +59,7 @@ As variáveis de ambiente para os serviços `api` e `handler` podem ser configur
 
 ## Endpoints da API
 
-A API do `pytasks` expõe os seguintes endpoints:
+A API do backend expõe os seguintes endpoints:
 
 | Endpoint                | Método   | Descrição                                        |
 | :---------------------- | :------- | :----------------------------------------------- |
@@ -68,7 +68,7 @@ A API do `pytasks` expõe os seguintes endpoints:
 | ``/tasks``              | ``GET``  | Lista todas as tarefas disponíveis.              |
 | ``/ping``               | ``GET``  | Verifica a saúde da API.                         |
 | ``/protected``          | ``GET``  | Retorna o payload decodificado do token JWT, se válido. |
-| ``/token``              | ``GET``  | Gera um token JWT para autenticação.             |
+| ``/token``              | ``POST``  | Gera um token JWT para autenticação.             |
 
 ### Exemplos de Requisições
 
