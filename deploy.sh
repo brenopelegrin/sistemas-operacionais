@@ -17,7 +17,6 @@ echo "[3] Resetting HEAD to the tag projeto-final-submission."
 printf "\n"
 cd projeto-ssc0541-grupo-06 && git fetch --all && git checkout main && git reset --hard projeto-final-submission
 printf "\n"
-echo "[4] Removing .git to make the repository static."
 echo "[DONE] Repository cloned and set up."
 echo "The repository is available at '~/projeto-ssc0541-grupo-06'."
 echo "The instructions to run the project are located at '~/projeto-ssc0541-grupo-06/README.md'."

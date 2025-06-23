@@ -41,7 +41,7 @@ services:
     build:
       context: ./frontend
     ports:
-      - "5051:3000"
+      - "7176:3000"
     links:
       - "api:api-docker-host"
     env_file:
