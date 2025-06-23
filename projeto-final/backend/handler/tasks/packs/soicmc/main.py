@@ -1,7 +1,7 @@
 def init(celery_app, **global_decorators):
     authorized_task = global_decorators['authorized_task']
 
-    #@authorized_task
+    @authorized_task
     @celery_app.task
     def run_checkpoint1(x: int, y: int):
         program_output = None
@@ -20,7 +20,7 @@ def init(celery_app, **global_decorators):
         
         return program_output
     
-    #@authorized_task
+    @authorized_task
     @celery_app.task
     def run_checkpoint2(x: int, y: int):
         program_output = None
@@ -39,7 +39,7 @@ def init(celery_app, **global_decorators):
         
         return program_output
     
-    #@authorized_task
+    @authorized_task
     @celery_app.task
     def run_checkpoint3(x: float, y: float):
         program_output = None

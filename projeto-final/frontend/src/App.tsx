@@ -57,7 +57,7 @@ function App() {
               :
                 <Routes>
                   <Route path='/' element={<HomePage />} />
-                  <Route path='/models/*' element={<Navigate to="/"/>} />
+                  <Route path='/models/*' element={<Navigate to="/login"/>} />
 
                   <Route path='/login' element={<LoginPage/>}/>
                   <Route path='/signup' element={<LoginPage/>}/> 
